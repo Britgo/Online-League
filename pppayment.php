@@ -179,25 +179,26 @@ $ind = $row[0];
 
 // OK now we are ready to do the PayPal stuff.
 
-include 'php/credentials.php';
+include 'ppcredentials.php';
+$ppcred = getppcredentials();
 
 // Step 1 is to Set it up
 
 $Req_array = array();
 apiapp($Req_array, "METHOD", "SetExpressCheckout");
 apiapp($Req_array, "VERSION", urlencode('51.0'));
-apiapp($Req_array, "USER", $API_UserName);
-apiapp($Req_array, "PWD", $API_Password);
-apiapp($Req_array, "SIGNATURE", $API_Signature);
+apiapp($Req_array, "USER", $ppcred->Username);
+apiapp($Req_array, "PWD", $ppcred->Password);
+apiapp($Req_array, "SIGNATURE", $ppcred->Signature);
 apiapp($Req_array, "AMT", "$amount.00");
 apiapp($Req_array, "PAYMENTACTION", "Sale");
 apiapp($Req_array, "CURRENCYCODE", "GBP");
 apiapp($Req_array, "DESC", urlencode($Pdescr));
 apiapp($Req_array, "RETURNURL", urlencode("https://league.britgo.org/payver.php?ind=$ind"));
-apiapp($Req_array, "CANCELURL", urlencode("http://league.britgo.org/paycanc.php?ind=$ind"));
+apiapp($Req_array, "CANCELURL", urlencode("https://league.britgo.org/paycanc.php?ind=$ind"));
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $API_Endpoint);
+curl_setopt($ch, CURLOPT_URL, $ppcred->Endpoint);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -239,6 +240,7 @@ mysql_query("update pendpay set token='$qtok' where ind=$ind");
 // Now for stage 2, invoke PayPal with the token
 
 $enctoken = urlencode($tok);
+$PPurl = $ppcred->Url;
 header("Location: $PPurl&cmd=_express-checkout&token=$enctoken");
 exit(0);
 ?>

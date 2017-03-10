@@ -127,21 +127,22 @@ catch (TeamException $e) {
 
 // OK now we are ready to do the PayPal stuff stage 3.
 
-include 'php/credentials.php';
+include 'ppcredentials.php';
+$ppcred = getppcredentials();
 
 // Step 3 is to get the details
 
 $Req_array = array();
 apiapp($Req_array, "METHOD", "GetExpressCheckoutDetails");
 apiapp($Req_array, "VERSION", urlencode('51.0'));
-apiapp($Req_array, "USER", $API_UserName);
-apiapp($Req_array, "PWD", $API_Password);
-apiapp($Req_array, "SIGNATURE", $API_Signature);
+apiapp($Req_array, "USER", $ppcred->Username);
+apiapp($Req_array, "PWD", $ppcred->Password);
+apiapp($Req_array, "SIGNATURE", $ppcred->Signature);
 $utok = urlencode($tok);
 apiapp($Req_array, "TOKEN", $utok);
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $API_Endpoint);
+curl_setopt($ch, CURLOPT_URL, $ppcred->Endpoint);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);

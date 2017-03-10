@@ -127,16 +127,17 @@ catch (TeamException $e) {
 
 // OK now perform the final PayPal phase to record the payment
 
-include 'php/credentials.php';
+include 'ppcredentials.php';
+$ppcred = getppcredentials();
 
 // Step 1 is to Set it up
 
 $Req_array = array();
 apiapp($Req_array, "METHOD", "DoExpressCheckoutPayment");
 apiapp($Req_array, "VERSION", urlencode('51.0'));
-apiapp($Req_array, "USER", $API_UserName);
-apiapp($Req_array, "PWD", $API_Password);
-apiapp($Req_array, "SIGNATURE", $API_Signature);
+apiapp($Req_array, "USER", $ppcred->Username);
+apiapp($Req_array, "PWD", $ppcred->Password);
+apiapp($Req_array, "SIGNATURE", $ppcred->Signature);
 apiapp($Req_array, "AMT", $amount);
 apiapp($Req_array, "PAYMENTACTION", "Sale");
 apiapp($Req_array, "CURRENCYCODE", "GBP");
@@ -144,7 +145,7 @@ apiapp($Req_array, "TOKEN", urlencode($tok));
 apiapp($Req_array, "PAYERID", urlencode($payerid));
 
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $API_Endpoint);
+curl_setopt($ch, CURLOPT_URL, $ppcred->Endpoint);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
