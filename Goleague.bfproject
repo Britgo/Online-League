@@ -7,7 +7,11 @@ openfiles: /home/jmc/src/Websites/goleague/lognews.pl:157:0:0:
 openfiles: /home/jmc/src/Websites/goleague/paydone.pl:70:0:0:
 openfiles: /home/jmc/src/Websites/goleague/redohistmatch.pl:17:0:0:
 openfiles: /home/jmc/src/Websites/goleague/remletters.pl:70:0:0:
-openfiles: /home/jmc/src/Websites/goleague/makenews:808:0:1:
+openfiles: /home/jmc/src/Websites/goleague/makenews:808:0:0:
+openfiles: /home/jmc/src/Websites/goleague/pppayment.php:6538:4307:0:
+openfiles: /home/jmc/src/Websites/goleague/paycanc.php:0:2278:0:
+openfiles: /home/jmc/src/Websites/goleague/payok.php:960:2755:0:
+openfiles: /home/jmc/src/Websites/goleague/payver.php:1137:2514:1:
 snr_recursion_level: 0
 convertcolumn_horizontally: 0
 adv_open_matchname: 0
@@ -18,8 +22,8 @@ show_mbhl: 1
 fb_show_backup_f: 0
 view_line_numbers: 1
 sync_include_backup: 0
-bmarks: ::/home/jmc/src/Websites/goleague/archive.php:1187:\n<?php:3904:
 bmarks: ::/home/jmc/src/Websites/goleague/archive.php:3355:>Promote {$promo[$nd:3904:
+bmarks: ::/home/jmc/src/Websites/goleague/archive.php:1187:\n<?php:3904:
 htmlbar_thumbnailwidth: 300
 view_left_panel: 1
 bookmarks_filename_mode: 1
@@ -28,7 +32,7 @@ c2e.convert_iso: 0
 opendir: file:///home/jmc/src/Websites/goleague
 wrap_text_default: 0
 default_mime_type: text/plain
-ssearch_text: against
+ssearch_text: api
 snr_casesens: 0
 view_blocks: 1
 name: Go League
@@ -71,10 +75,6 @@ ssearch_regex: 0
 e2c.convert_iso: 0
 ssearch_casesens: 0
 charmap_block: 1
-recent_files: file:///home/jmc/src/Websites/goleague/php/jumpto.php
-recent_files: file:///home/jmc/src/Websites/goleague/php/itrecord.php
-recent_files: file:///home/jmc/src/Websites/goleague/league.php
-recent_files: file:///home/jmc/src/Websites/goleague/php/histmatch.php
 recent_files: file:///home/jmc/src/Websites/goleague/teamdisp.php
 recent_files: file:///home/jmc/src/Websites/goleague/php/team.php
 recent_files: file:///home/jmc/src/Websites/goleague/archive2.php
@@ -93,14 +93,18 @@ recent_files: file:///home/jmc/src/Websites/PHPlib/credentials.php
 recent_files: file:///home/jmc/src/Websites/goleague/php/match.php
 recent_files: file:///home/jmc/src/Websites/tournreg/php/opendb.php
 recent_files: file:///home/jmc/src/Websites/goleague/php/opendatabase.php
+recent_files: file:///home/jmc/src/Websites/goleague/makenews
 recent_files: file:///home/jmc/src/Websites/goleague/archive.php
 recent_files: file:///home/jmc/src/Websites/goleague/dohistscores.pl
-recent_files: file:///home/jmc/src/Websites/goleague/remletters.pl
-recent_files: file:///home/jmc/src/Websites/goleague/captmail.pl
-recent_files: file:///home/jmc/src/Websites/goleague/lognews.pl
 recent_files: file:///home/jmc/src/Websites/goleague/paydone.pl
+recent_files: file:///home/jmc/src/Websites/goleague/lognews.pl
 recent_files: file:///home/jmc/src/Websites/goleague/redohistmatch.pl
-recent_files: file:///home/jmc/src/Websites/goleague/makenews
+recent_files: file:///home/jmc/src/Websites/goleague/captmail.pl
+recent_files: file:///home/jmc/src/Websites/goleague/remletters.pl
+recent_files: file:///home/jmc/src/Websites/goleague/pppayment.php
+recent_files: file:///home/jmc/src/Websites/goleague/paycanc.php
+recent_files: file:///home/jmc/src/Websites/goleague/payok.php
+recent_files: file:///home/jmc/src/Websites/goleague/payver.php
 snr_replacetype: 0
 savedir: file:///home/jmc/src/Websites/goleague
 spell_check_default: 0
@@ -113,8 +117,6 @@ fb_viewmode: 2
 c2e.convert_symbol: 0
 spell_lang: en
 ssearch_dotmatchall: 0
-searchlist: <tr><td>
-searchlist: </td></tr>
 searchlist: innertube
 searchlist: memb
 searchlist: display
@@ -128,6 +130,8 @@ searchlist: histmatche
 searchlist: next
 searchlist: $ref
 searchlist: against
+searchlist: ppurl
+searchlist: api
 autocomplete: 1
 outputb_show_all_output: 0
 bookmarks_show_mode: 0
