@@ -1,0 +1,1 @@
+rsync -vruzptH --exclude='*~' $HOME/src/Websites/goleague/league/ ruffles:/home/webroot/stago-web/html/league

@@ -1,0 +1,47 @@
+To: [% EMAIL %]
+Subject: Online League Subscription for [% TEAM %]
+Reply-to: online-league@britgo.org
+
+Dear [% CAPTFIRST %] [% CAPTLAST %]
+
+(Please could you note that this is an automatically-generated email).
+
+The online league season for [% YEAR %] is now under way and the subscription
+for your team of £[% AMOUNT %] is now due.
+[% IF NUMNON == 0 %]
+This consists of just the basic subscription of £15. Nothing further is
+due as we believe all your team to be BGA members.
+[% ELSE %]
+[% IF NUMNON == 1 %]This is a basic subscription of £15 together with a further £5 as we
+do not think that the following person is a BGA member:[% ELSE %]This is the basic subscription of £15 together with a further £5 as we
+do not think that the following people are BGA members:[% END %]
+[% FOREACH m IN NONBGA %]
+	[% m %][% END %]
+
+If our information is wrong, please advise us immediately so that we can
+update our records and recalculate the subscription.
+[% END %]
+Please can you pay this as soon as possible, either by cheque made payable
+to the British Go Association at:
+
+	Toby Manning
+	26 Groby Lane
+	Newtown Linford
+	LE6 0HH
+	01530 245298
+	07798 825299(mobile)
+
+Alternatively you can pay online via Paypal by logging in to the league
+website at
+
+	http://league.britgo.org
+
+and selecting the menu entry "Pay Subscriptions"
+
+We trust you have an enjoyable season with the online league and wish your
+team every success.
+
+Thank you
+
+BGA online league management
+(Queries to jmc@toad.me.uk)

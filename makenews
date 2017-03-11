@@ -1,0 +1,54 @@
+#! /usr/bin/perl
+##
+##
+## Copyright (c) John M Collins, Xi Software Ltd 2010.
+##
+## makenews.pl: created on Wed Mar 10 2010.
+##----------------------------------------------------------------------
+##
+
+use Config::INI::Reader;
+use XML::LibXML;
+use DBD::mysql;
+use Time::Local;
+
+exit 0 if -e "norssrun";
+
+$inicont = Config::INI::Reader->read_file('/etc/webdb-credentials');
+$ldbc = $inicont->{league};
+$Database = DBI->connect("DBI:mysql:$ldbc->{database}", $ldbc->{user}, $ldbc->{password}) or die "Cannot open DB";
+
+$doc = XML::LibXML::Document->createDocument;
+$docel = $doc->createElement("rss");
+$doc->setDocumentElement($docel);
+$docel->setAttribute("version", "2.0");
+$chel = XML::LibXML::Element->new("channel");
+$docel->appendChild($chel);
+
+@Days = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+@Months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+
+$sfh = $Database->prepare("select ndate,item,link from news where rss=1 order by ndate desc limit 15");
+$sfh->execute;
+while (my ($d,$i,$lnk) = $sfh->fetchrow_array)  {
+    my ($y,$m,$md) = $d =~ /(\d+)-(\d+)-(\d+)/;
+    my $t = timelocal(0,0,12,$md,$m-1,$y-1900);
+    my @dbits = localtime($t);
+    $d = sprintf("%s, %.2d %s %d 12:00:00 GMT", $Days[$dbits[6]], $dbits[3], $Months[$dbits[4]], $dbits[5]+1900);
+    my $itemel = XML::LibXML::Element->new("item");
+    $chel->appendChild($itemel);
+    $tit = "League Update";
+    if ($lnk =~ /showmtch/) {
+	$tit = "Match Result";
+    }
+    elsif ($lnk =~ /leagueb/) {
+	$tit = "League Status";
+    }
+    $itemel->appendTextChild("title", $tit);
+    $itemel->appendTextChild("description", $i);
+    $lnk = "news.php" if length($lnk) == 0;
+    $lnk = "http://league.britgo.org/$lnk" unless $lnk =~ m|/|;
+    $itemel->appendTextChild("link", $lnk);
+    $itemel->appendTextChild("pubDate", $d);
+}
+$doc->toFile("rss.xml", 1);

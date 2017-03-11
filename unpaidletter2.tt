@@ -1,0 +1,42 @@
+To: [% EMAIL %]
+Subject: Online League Subscription for [% TEAM %] is overdue
+Reply-to: online-league@britgo.org
+
+Dear [% CAPTFIRST %] [% CAPTLAST %]
+
+(Please could you note that this is an automatically-generated email).
+
+Despite two reminders, we have not received any payment for the outstanding
+online league subscription of £[% AMOUNT %] for team [% TEAM %].
+
+[% IF GAMES != 0 %]We note that [% GAMES %] games have been played by your team
+in the league, so we are sure that your team is active.
+[% END %]In fairness to the other teams which have paid, we must now insist that this
+sum be paid immediately.
+
+Continued failure to pay may result in disqualification of your team from
+the league regardless of the outcome of current matches in progress.
+
+Payments may be made either by cheque made payable to the
+British Go Association at:
+
+	Toby Manning
+	26 Groby Lane
+	Newtown Linford
+	LE6 0HH
+	01530 245298
+	07798 825299(mobile)
+
+Alternatively you can pay online via Paypal by logging in to the league
+website at
+
+	http://league.britgo.org
+
+and selecting the menu entry "Pay Subscriptions"
+
+We look forward to your urgent attention to this message.
+
+Thank you
+
+BGA online league management
+(Queries to jmc@toad.me.uk)
