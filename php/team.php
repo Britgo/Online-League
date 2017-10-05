@@ -204,7 +204,7 @@ class Team extends Teambase  {
 							 $this->get_n_from_matches("{$this->queryof('ateam')}", "sum(draws)");
 		$this->Lostg = $this->get_n_from_matches("{$this->queryof('hteam')}", "sum(awins)") +
 							$this->get_n_from_matches("{$this->queryof('ateam')}", "sum(hwins)");
-		if ($p)
+		if ($p)  {
 			$this->Sortrank = $this->Playedm * $p->Played +
 									$this->Wonm * $p->Won +
 									$this->Drawnm * $p->Drawn +	
@@ -212,6 +212,9 @@ class Team extends Teambase  {
 									$this->Wong * $p->Forg +
 									$this->Drawng * $p->Drawng +
 									$this->Lostg * $p->Againstg;
+			return $this->Sortrank;
+		}
+		return  0;
 	}
 	
 	public function count_members() {
