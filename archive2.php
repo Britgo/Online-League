@@ -87,7 +87,7 @@ foreach ($Full_teams as $team) {
 	$hteam->Description = $team->Description;
 	$hteam->Division = $team->Division;
 	$hteam->Playing = $team->Playing;
-	$hteam->Sortrank = $team->get_scores($Pars);		// Also sets Wonm etc
+	$hteam->Sortrank = $team->get_scores($pars);		// Also sets Wonm etc
 	$hteam->Playedm = $team->Playedm;
 	$hteam->Wonm = $team->Wonm;
 	$hteam->Drawnm = $team->Drawnm;

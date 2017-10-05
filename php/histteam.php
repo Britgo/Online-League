@@ -78,7 +78,9 @@ class Histteam extends Teambase {
 		$qlostg = $this->Lostg;
 		// Delete any team with the same name for the season
 		mysql_query("delete from histteam where {$this->Seas->queryof()} and name='$qname'");
-		if (!mysql_query("insert into histteam (name,description,divnum,seasind,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg) values ('$qname','$qdescr',$qdiv,$qseas,$qplaying,$qsortrank,$qplayedm,$qwonm,$qdrawnm,$qlostm,$qwong,$qdrawng,$qlostg)"))
+		$cols = "(name,description,divnum,seasind,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg)";
+		$vals = "('$qname','$qdescr',$qdiv,$qseas,$qplaying,$qsortrank,$qplayedm,$qwonm,$qdrawnm,$qlostm,$qwong,$qdrawng,$qlostg)";
+		if (!mysql_query("insert into histteam $cols values $vals"))
 			throw new TeamException(mysql_error());
 	}
 	
