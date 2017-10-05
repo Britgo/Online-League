@@ -81,8 +81,7 @@ class Histteam extends Teambase {
 		$cols = "(name,description,divnum,seasind,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg)";
 		$vals = "('$qname','$qdescr',$qdiv,$qseas,$qplaying,$qsortrank,$qplayedm,$qwonm,$qdrawnm,$qlostm,$qwong,$qdrawng,$qlostg)";
 		if (!mysql_query("insert into histteam $cols values $vals"))
-			//throw new TeamException(mysql_error());
-			throw new TeamException("Cols=$cols Vals=$vals");
+			throw new TeamException(mysql_error());
 	}
 	
 	public function count_members() {
