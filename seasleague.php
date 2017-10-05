@@ -21,6 +21,7 @@ include 'php/rank.php';
 include 'php/player.php';
 include 'php/season.php';
 include 'php/teambase.php';
+include 'php/matchbase.php';
 include 'php/histteam.php';
 include 'php/histmatch.php';
 include 'php/matchdate.php';
