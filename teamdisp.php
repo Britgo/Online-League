@@ -122,7 +122,7 @@ if ($team->Playedm != 0)  {
 Match record is Played: {$team->Playedm} Won: {$team->Wonm}
 Drawn: {$team->Drawnm} Lost: {$team->Lostm}.
 </p>
-<img src="php/piewdl.php?w={$team->Won}&d={$team->Drawn}&l={$team->Lost}">
+<img src="php/piewdl.php?w={$team->Wong}&d={$team->Drawng}&l={$team->Lostg}">
 <br />
 <table class="teamdisp">
 <tr>
