@@ -30,38 +30,11 @@ $hasfoot = true;
 include 'php/nav.php'; ?>
 <h1>BGA Online Leagues</h1>
 <img src="images/gogod_shield.medium.jpg" width="359" height="400" alt="Shield picture" align="left" border="0" hspace="20" vspace="5">
-<h2>Congratulations to the 2015 winners!</h2>
-<p>Congratulations to the <b>Cambridge A</b> team (Lou Yuxiang, Paul Smith, Atta Chui and James Wood)
-for winning the seventh season of the online league.
-In second place were Edinburgh 1. Winning division 2 and promotion to division 1 were UK Youth.</p>
-<p>The winning teams received prizes consisting of places in Guo Juan's Group Classes and subscriptions to the Internet Lectures and Training system.
-See the <a href="http://internetgoschool.com/index.vhtml" target="_blank">Internet Go School site</a> for more details.</p> 
-<h2>Winning teams to date</h2>
-<p>The following are the winning teams to date:</p>
-<table cellpadding="2" cellspacing="2">
-<tr><th>Season</th><th>Winner</th></tr>
-<tr><td>October 2009 to February 2010</td><td>Cambridge</td></tr>
-<tr><td>May to December 2010</td><td>Dundee</td></tr>
-<tr><td>All of 2011</td><td>Central London Go Club A</td></tr>
-<tr><td>All of 2012</td><td>Edinburgh</td></tr>
-<tr><td>All of 2013</td><td>Edinburgh A</td></tr>
-<tr><td>All of 2014</td><td>Central London Go Club A</td></tr>
-<tr><td>All of 2015</td><td>Cambridge A</td></tr>
-</table>
-<p>You can see the current league standings and historical records using the menu items to the left, together with historical records.
-In the majority of cases you can download and review the actual games.</p>
-<h2>Information</h2>
-<p>For more information about the league, please <a href="info.php" title="Give more information">go here</a>.</p>
-<h2>Joining</h2>
-<p>The 2016 league is now recruiting new teams and players for the new season which we hope to get going in February 2016.</p>
-<p>We can easily add extra players to teams, so please let us know if you would like to join in. We normally group players from the same locale into teams,
-but we are happy to accommodate other players as needed.</p>
-<h2>Rules</h2>
+<p>Welcome to the BGA online league site. Please use the menus on the left to select a destination.</p>
+<p>To find out more about the league,please <a href="info.php" title="Give more information">go here</a>.</p>
 <p>A full description of playing games is to be found
 under <a href="playing.php" title="Read description of rules and instructions for playing">rules</a>.</p>
-<h2>Prizes</h2>
-<p>Prizes for 2016 and subsequent years awarded to the winning team in each division will be vouchers redeemable with
-<a href="http://internetgoschool.com/index.vhtml" target="_blank">Guo Juan's Internet Go School</a>.</p>
+<p>To see the current league standings, please <a href="league.php" title="Show currennt standings">go here</a>.
 </div>
 </div>
 <div id="Footer">
