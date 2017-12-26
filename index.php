@@ -30,11 +30,10 @@ $hasfoot = true;
 include 'php/nav.php'; ?>
 <h1>BGA Online Leagues</h1>
 <img src="images/gogod_shield.medium.jpg" width="359" height="400" alt="Shield picture" align="left" border="0" hspace="20" vspace="5">
-<p>Welcome to the BGA online league site. Please use the menus on the left to select a destination.</p>
-<p>To find out more about the league,please <a href="info.php" title="Give more information">go here</a>.</p>
-<p>A full description of playing games is to be found
-under <a href="playing.php" title="Read description of rules and instructions for playing">rules</a>.</p>
-<p>To see the current league standings, please <a href="league.php" title="Show currennt standings">go here</a>.
+<p>Welcome to the BGA online league site. Please use the menus on the left to select a destination.
+In particulare, to find out more about the league,please <a href="info.php" title="Give more information">go here</a>,
+A full description of playing games is to be found under <a href="playing.php" title="Read description of rules and instructions for playing">rules</a>.
+To see the current league standings, please <a href="league.php" title="Show currennt standings">go here</a>.</p>
 </div>
 </div>
 <div id="Footer">
