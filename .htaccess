@@ -2,6 +2,9 @@
 # Apache/PHP/Drupal settings:
 #
 
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # Set it to use PHP5
 #Action application/x-pair-sphp5 /cgi-sys/php-cgiwrap/maproom/php5.cgi
 #AddType application/x-pair-sphp5 .php
