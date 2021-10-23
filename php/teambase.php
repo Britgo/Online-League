@@ -1,11 +1,12 @@
 <?php
 
-//   Copyright 2016 John Collins
+//   Copyright 2016-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -35,7 +36,7 @@ class TeamBase {
 	public $Lostg;			// Lost games
 	public $Sortrank;		// Ranking for league sort
 	public $Playing;		// Playing in relevant season
-	
+
 	public function __construct($n = "") {
 		if (strlen($n) != 0)
 			$this->Name = $n;
@@ -50,17 +51,17 @@ class TeamBase {
 		$this->Lostg = 0;
 		$this->Playing = true;
 	}
-	
+
 	public function fromget($gf) {
 		$this->Name = $_GET[$gf];
 		if (strlen($this->Name) == 0)
-			throw new TeamException("Null name field"); 
+			throw new TeamException("Null name field");
 	}
-	
+
 	public function queryname() {
-		return mysql_real_escape_string($this->Name);
+		return $Connection->real_escape_string($this->Name);
 	}
-	
+
 	public function noquote() {
 		$p = array('/"/', "/'/");
 		$r = array("", "");
@@ -68,21 +69,21 @@ class TeamBase {
 	}
 
 	// Overridden in team.php not histteam.php
-		
+
 	public function display_name() {
 		return htmlspecialchars($this->Name);
 	}
-	
+
 	public function display_description() {
 		return htmlspecialchars($this->Description);
 	}
-	
+
 	// Trivial but room for expansion
-	
+
 	public function display_division() {
 		return $this->Division;
 	}
-	
+
 	public function is_same($tm) {
 		return $this->Name == $tm->Name;
 	}

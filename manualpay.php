@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,36 +20,37 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
-if (!$admin) {
-	$mess = "You have to be logged in as an admin to see this page";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
+
+$Connection = opendatabase(true);
+if (!$Connection->admin)
+   wrongentry("You have to be logged in as an admin to see this page");
+
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
 include 'php/listppay.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Record Manual Payments";
-include 'php/head.php';
+
 if (count($unpaid_teams) + count($unpaid_il) <= 0)
-	print "<body>\n";
+	$ld = NULL;
 else
-   print "<body onload=\"fillinvals();\">\n";
-?>
-<script language="javascript" src="webfn.js"></script>
+	$ld = "fillinvals();";
+
+lg_html_header("Record Manual Payments", NULL, $ld);
+print <<<EOT
 <script language="javascript" src="payfuncs.js"></script>
-<?php include 'php/nav.php'; ?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Record Manual Payments</h1>
-<?php
+
+EOT;
 if (count($unpaid_teams) + count($unpaid_il) <= 0)
 	print <<<EOT
 <p>Thanks for visiting but nothing actually needs paying!</p>
@@ -74,8 +81,5 @@ if need be by going to the <a href="teams.php" title="Bring up list of teams">te
 
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

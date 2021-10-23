@@ -1,13 +1,17 @@
 <?php
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 
-$ret = mysql_query("select name from team where paid=0");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_array($ret))  {
+$Connection = opendatabase(false, false);
+
+$ret = $Connection->query("SELECT name FROM team WHERE paid=0");
+if ($ret && $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_array())  {
 		$team = new Team($row[0]);
 		$team->fetchdets();
 		$dest = $team->Captain->Email;

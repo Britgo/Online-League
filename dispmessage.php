@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2013 John Collins
+//   Copyright 2013-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -37,35 +44,30 @@ function concmatch($id, $mp) {
 EOT;
 }
 
+$Connection = opendatabase(true);
+
 // Get who I am
 
 try {
-        $player = new Player();
-        $player->fromid($userid);
+	$player = new Player();
+   $player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-        $mess = $e->getMessage();
-        include 'php/wrongentry.php';
-        exit(0);
+	wrongentry($e->getMessage());
 }
 
 // Get message
 
 $messid = $_GET['msgi'];
 $sent = isset($_GET['sent']);
-if  (!preg_match('/^\d+$/', $messid))  {
-	$mess = "Inappropriate message id $messid";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if  (!preg_match('/^\d+$/', $messid))
+	wrongentry("Inappropriate message id $messid");
 
-$ret = mysql_query("select fromuser,touser,created,matchind,gameind,subject,hasread,contents from message where ind=$messid");
-if  (!$ret || mysql_num_rows($ret) == 0)  {
-	$mess = "Could not find message $messid";
-	include 'php/wrongentry.php';
-	exit(0);
-}
-$row = mysql_fetch_assoc($ret);
+$ret = $Connection->query("SELECT fromuser,touser,created,matchind,gameind,subject,hasread,contents FROM message WHERE ind=$messid");
+if  (!$ret || $ret->num_rows == 0)
+	wrongentry("Could not find message $messid");
+
+$row = $ret->fetch_assoc();
 $fu = $row["fromuser"];
 $tu = $row["touser"];
 $cr = $row["created"];
@@ -80,21 +82,17 @@ try {
 	$fp->fromid($fu);
 }
 catch (PlayerException $e) {
-	$mess = "Unknown sender id $fu";
-	include 'php/wrongentry.php';
-	exit(0);
+	wrongentry("Unknown sender id $fu");
 }
 try {
 	$tp = new Player();
 	$tp->fromid($tu);
 }
 catch (PlayerException $e) {
-	$mess = "Unknown recipient id $tu";
-	include 'php/wrongentry.php';
-	exit(0);
+	wrongentry("Unknown recipient id $tu");
 }
 if (!$hasr && !$sent)
-	mysql_query("update message set hasread=1 where ind=$messid");
+	$Connection->query("UPDATE message SET hasread=1 WHERE ind=$messid");
 
 if  (preg_match("/(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)/", $cr, $matches))  {
 	$dat = $matches[3] . '/' . $matches[2] . '/' . $matches[1];
@@ -128,19 +126,13 @@ if ($gid != 0)  {
 		$gid = 0;
 	}
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Display Message";
-include 'php/head.php';
-?>
-<body>
-<?php include 'php/nav.php';
+
+lg_html_header("Display Message");
+lg_html_nav();
+
 $mhdr = $hasr? "Message": "New message";
 print <<<EOT
 <h1>$mhdr</h1>
-
 <table class="resultsb">
 <tr>
 	<td><strong>From:</strong></td>
@@ -170,13 +162,12 @@ $hcont = preg_replace("/(\r?\n){2,}/", "</p>\n<p>", $hcont);
 print <<<EOT
 </table>
 <p>$hcont</p>
-
 <h2>Delete message</h2>
 <p><a href="delmessage.php?msgi=$messid">Click here</a> if you want to delete this message.</p>
 
 EOT;
 
-// If it's a received message, offer the chance to reply  
+// If it's a received message, offer the chance to reply
 
 if (!$sent)  {
 	print  "<h2>Send reply</h2>\n";
@@ -195,10 +186,8 @@ if (!$sent)  {
 <br clear="all" />
 <p>Then <input type="submit" value="Send Reply" /> when ready.</p>
 </form>
+
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

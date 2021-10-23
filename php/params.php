@@ -1,6 +1,12 @@
 <?php
 
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -41,12 +47,13 @@ class Params  {
 		$this->Hreduct = 0;
 		$this->Rankfuzz = 0;
 	}
-	
+
 	public function fetchvalues() {
-		$ret = mysql_query("select sc,val from params");
+		global $Connection;
+		$ret = $Connection->query("SELECT sc,val FROM params");
 		if (!$ret)
-			throw new ParamException(mysql_error());
-		while ($row = mysql_fetch_assoc($ret)) {
+			throw new ParamException($Connection->error);
+		while ($row = $ret->fetch_assoc()) {
 			$v = $row["val"];
 			switch ($row["sc"])  {
 			case 'p':
@@ -82,20 +89,21 @@ class Params  {
 			}
 		}
 	}
-	
+
 	public function putvalues() {
-		if (!mysql_query("delete from params"))
-			throw new ParamException(mysql_error());
-		mysql_query("insert into params (sc,val) values ('p', $this->Played)");
-		mysql_query("insert into params (sc,val) values ('w', $this->Won)");
-		mysql_query("insert into params (sc,val) values ('d', $this->Drawn)");
-		mysql_query("insert into params (sc,val) values ('l', $this->Lost)");
-		mysql_query("insert into params (sc,val) values ('f', $this->Forg)");
-		mysql_query("insert into params (sc,val) values ('a', $this->Againstg)");
-		mysql_query("insert into params (sc,val) values ('j', $this->Drawng)");
-		mysql_query("insert into params (sc,val) values ('hd', $this->Hdiv)");
-		mysql_query("insert into params (sc,val) values ('hr', $this->Hreduct)");
-		mysql_query("insert into params (sc,val) values ('fz', $this->Rankfuzz)");
+		global $Connection;
+		if (!$Connection->query("DELETE FROM params"))
+			throw new ParamException($Connection->error);
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('p', $this->Played)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('w', $this->Won)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('d', $this->Drawn)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('l', $this->Lost)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('f', $this->Forg)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('a', $this->Againstg)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('j', $this->Drawng)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('hd', $this->Hdiv)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('hr', $this->Hreduct)");
+		$Connection->query("INSERT INTO params (sc,val) VALUES ('fz', $this->Rankfuzz)");
 	}
 }
 ?>

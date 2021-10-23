@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -13,19 +19,20 @@
 
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
+
+
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
-$Title = "Apply for new account";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+
+$Connection = opendatabase(false, false);  // Don't even think about logging in
+
+lg_html_header("Apply for new account");
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -53,16 +60,17 @@ function formvalid()
 		return true;
 }
 </script>
-<?php include 'php/nav.php'; ?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Apply for new account on online league</h1>
 <p>Please use the form below to apply for an account on the online leagues.
 You will need an account to be included in a team for the team league and to
-play at all in the individual league.
-</p>
-<p><b>Please</b> don't try to create multiple accounts under different names however
+play at all in the individual league.</p>
+<p><b>Please</b> do not try to create multiple accounts under different names however
 bad your playing record is! If you have forgotten your password, select the "remind
-password" entry.
-</p>
+password" entry.</p>
 <p>Please note that email addresses and phone numbers are
 <b>not</b> published anywhere. The "send email" links are
 all indirect.</p>
@@ -79,14 +87,16 @@ all indirect.</p>
 <tr><td>Phone number(s)</td>
 <td><input type="text" name="phone" size="30"></td></tr>
 <tr><td>Latest time to phone</td><td>
-<?php
+
+EOT;
 $player = new Player();
 $player->latestopt();
-?>
+print <<<EOT
 </td></tr>
 <tr><td>Club (i.e. face-to-face)</td>
 <td>
-<?php
+
+EOT;
 $player->Club = new Club('NoC');
 $player->clubopt();
 print <<<EOT
@@ -95,7 +105,8 @@ print <<<EOT
 EOT;
 $player->rankopt();
 print "</td></tr>\n";
-?>
+print <<<EOT
+</td></tr>
 <tr><td>OK to send emails about pending matches</td>
 <td><input type="checkbox" name="okem" checked></td></tr>
 <tr><td>Include trivial news items in display</td>
@@ -112,11 +123,9 @@ print "</td></tr>\n";
 &lt;&lt; Because I'm not a spammer I'm turning this off and this on &gt;&gt;
 <input type="checkbox" name="turnon"></td></tr>
 </table>
-<p>
-<input type="submit" name="subm" value="Create Account">
-</p>
+<p><input type="submit" name="subm" value="Create Account"></p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

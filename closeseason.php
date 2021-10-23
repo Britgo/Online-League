@@ -1,10 +1,12 @@
 <?php
-//   Copyright 2014 John Collins
+//   Copyright 2014-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -19,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -32,16 +35,18 @@ include 'php/game.php';
 include 'php/season.php';
 include 'php/news.php';
 
+$Connection = opendatabase(true);
+
 $unplayed_matches = $setdrawn_games = 0;
 
 try  {
-	
+
 	//  Select and delete all matches which haven't been played at all
-	
-	$ret = mysql_query("select ind from lgmatch where result='N'");
+
+	$ret = $Connection->query("SELECT ind FROM lgmatch WHERE result='N'");
 	if ($ret)  {
 		$inds = array();
-		while ($row = mysql_fetch_array($ret))  {
+		while ($row = $ret->fetch_array())  {
 			array_push($inds, $row[0]);
 		}
 		foreach ($inds as $ind)  {
@@ -52,13 +57,13 @@ try  {
 		}
 		$unplayed_matches = count($inds);
 	}
-	
+
 	// Mark unfinished games as drawn
-	
-	$ret = mysql_query("select ind from lgmatch where result='P'");
+
+	$ret = $Connection->query("SELECT ind FROM lgmatch WHERE result='P'");
 	if  ($ret)  {
 		$inds = array();
-		while ($row = mysql_fetch_array($ret))  {
+		while ($row = $ret->fetch_array())  {
 			array_push($inds, $row[0]);
 		}
 		$today = new Matchdate();
@@ -76,7 +81,7 @@ try  {
 			}
 		}
 	}
-	
+
 	//  Create news item if we actually did anything
 
 	$matchmsg = "$unplayed_matches match";
@@ -86,37 +91,21 @@ try  {
 	if ($setdrawn_games != 1)
 		$gamemsg .= 's'	;
 	if ($unplayed_matches + $setdrawn_games > 0)  {
-		$n = new News($userid, "Closed season cancelling $matchmsg and drawing $gamemsg", true); 
+		$n = new News($Connection->userid, "Closed season cancelling $matchmsg and drawing $gamemsg", true);
 		$n->addnews();
 	}
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-   include 'php/dataerror.php';
-   exit(0);        
+	database_error($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Closed season";
-include 'php/head.php';
-?>
-<body>
-<?php include 'php/nav.php'; ?>
-<h1>Close Season Completed</h1>
-<?php
+
+lg_html_header("Closed season");
+lg_html_nav();
 print <<<EOT
-<p>
-Successfully closed the season cancelling $matchmsg and setting drawn $gamemsg. 
-</p>
+<h1>Close Season Completed</h1>
+<p>Successfully closed the season cancelling $matchmsg and setting drawn $gamemsg.</p>
+<p><a href="admin.php" title="Go back to admin page">Click here</a> to go back to the admin page.</p>
 
 EOT;
+lg_html_footer();
 ?>
-<p>
-<a href="admin.php" title="Go back to admin page">Click here</a> to go back to the admin page.
-</p>
-</div>
-</div>
-</body>
-</html>

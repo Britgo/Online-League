@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,42 +32,34 @@ include 'php/teammemb.php';
 include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/season.php';
+
+$Connection = opendatabase();
 try {
 	$team = new Team();
 	$team->fromget();
 	$team->fetchdets();
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Team {$team->display_name()}";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php';
+
+lg_html_header("Team {$team->display_name()}");
+lg_html_nav();
 print <<<EOT
 <h1>Team {$team->display_name()}</h1>
-<p>
-Team {$team->display_name()} - {$team->display_description()} - division
-{$team->display_division()}
-</p>
-<p>
-Team captain is {$team->display_captain()}.
-{$team->display_capt_email($logged_in)}
-</p>
+<p>Team {$team->display_name()} - {$team->display_description()} - division
+{$team->display_division()}</p>
+
+<p>Team captain is {$team->display_captain()}.
+{$team->display_capt_email($logged_in)}</p>
 
 EOT;
 if ($admin && !$team->Paid)
 	print <<<EOT
 <p><b>Team has not paid.</b></p>
+
 EOT;
+
 print <<<EOT
 <h3>Members</h3>
 <table class="teamdisp">
@@ -110,18 +110,18 @@ print <<<EOT
 
 EOT;
 }
-?>
+print <<<EOT
 </table>
 <p>(Player record includes all online league games).</p>
-<?php
+
+EOT;
+
 $team->get_scores();
 if ($team->Playedm != 0)  {
 	print <<<EOT
 <h2>Match Record</h2>
-<p>
-Match record is Played: {$team->Playedm} Won: {$team->Wonm}
-Drawn: {$team->Drawnm} Lost: {$team->Lostm}.
-</p>
+<p>Match record is Played: {$team->Playedm} Won: {$team->Wonm}
+Drawn: {$team->Drawnm} Lost: {$team->Lostm}.</p>
 <img src="php/piewdl.php?w={$team->Wong}&d={$team->Drawng}&l={$team->Lostg}">
 <br />
 <table class="teamdisp">
@@ -132,9 +132,10 @@ Drawn: {$team->Drawnm} Lost: {$team->Lostm}.
 </tr>
 
 EOT;
-	$ret = mysql_query("select ind from lgmatch where result!='N' and result!='P' and ({$team->queryof('hteam')} or {$team->queryof('ateam')}) order by matchdate");
+
+	$ret = $Connection->query("SELECT ind FROM lgmatch WHERE result!='N' AND result!='P' AND ({$team->queryof('hteam')} OR {$team->queryof('ateam')}) ORDER BY matchdate");
 	if ($ret)  {
-		while ($row = mysql_fetch_array($ret))  {
+		while ($row = $ret->fetch_array())  {
 			$mtch = new Match($row[0]);
 			$mtch->fetchdets();
 			$oppteam = $mtch->Hteam;
@@ -167,27 +168,27 @@ EOT;
 if ($team->Wong + $team->Drawng + $team->Lostg != 0)  {
 	print <<<EOT
 <h2>Game Record</h2>
-<p>
-Game record is For: {$team->Wong} Against: {$team->Lostg} Drawn: {$team->Drawng}.
-</p>
+<p>Game record is For: {$team->Wong} Against: {$team->Lostg} Drawn: {$team->Drawng}.</p>
 <img src="php/piewdl.php?w={$team->Wong}&d={$team->Drawng}&l={$team->Lostg}">
 <br />
 
 EOT;
 }
-?>
+print <<<EOT
 <p><b>Please note</b> you can click on players, opposing teams and results for more details.</p>
-<?php
-$ret = mysql_query("select seasind from histteam where {$team->queryof()} order by seasind");
-if ($ret && mysql_num_rows($ret) > 0)  {
+
+EOT;
+
+$ret = $Connection->query("SELECT seasind FROM histteam WHERE {$team->queryof()} ORDER BY seasind");
+if ($ret && $ret->num_rows > 0)  {
 	print <<<EOT
 <h2>Previous Seasons</h2>
-<p>Select from the following to see the performance of {$team->display_name()} in previous seasons.
-</p>
+<p>Select from the following to see the performance of {$team->display_name()} in previous seasons.</p>
 <table>
 
 EOT;
-	while ($row = mysql_fetch_array($ret)) {
+
+	while ($row = $ret->fetch_array()) {
 		$s = new Season($row[0]);
 		$s->fetchdets();
 		print "<tr><td><a href=\"histteamdisp.php?{$team->urlof('htn')}&{$s->urlof()}\" class=\"nound\">{$s->display_name()}</a></td></tr>\n";
@@ -197,8 +198,5 @@ EOT;
 
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

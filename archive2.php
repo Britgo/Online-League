@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -32,6 +40,8 @@ include 'php/histteammemb.php';
 include 'php/histmatch.php';
 include 'php/news.php';
 
+$Connection = opendatabase(true);
+
 // Regurgitate what we did before in case we've been entered wrongly.
 
 $pars = new Params();
@@ -40,18 +50,13 @@ $pars->fetchvalues();
 // Check that we are ready to archive
 
 $Sname = $_POST["seasname"];
-if (strlen($Sname) == 0)  {
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if (strlen($Sname) == 0)
+	wrongentry();
 
 include 'php/promoreleg.php';
 
-if (count($messages) > 0)  {
-	$mess = "Not ready to do end-of-season";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if (count($messages) > 0)
+	wrongentry("Not ready to do end-of-season");
 
 // Create the Season
 // Set the name and dates
@@ -60,17 +65,17 @@ $Seas = new Season();
 $Seas->Name = $Sname;
 $earliest = new Matchdate();
 $latest = new Matchdate();
-$ret = mysql_query("select matchdate from lgmatch order by matchdate limit 1");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	$row = mysql_fetch_array($ret);
+$ret = $Connection->query("SELECT matchdate FROM lgmatch ORDER BY matchdate limit 1");
+if ($ret && $ret->num_rows > 0)  {
+	$row = $ret->fetch_array();
 	if ($row)
-		$earliest->enctime($row[0]);	
+		$earliest->enctime($row[0]);
 }
-$ret = mysql_query("select matchdate from lgmatch order by matchdate desc limit 1");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	$row = mysql_fetch_array($ret);
+$ret = $Connection->query("SELECT matchdate FROM lgmatch ORDER BY matchdate desc limit 1");
+if ($ret && $ret->num_rows > 0)  {
+	$row = $ret->fetch_array();
 	if ($row)
-		$latest->enctime($row[0]);	
+		$latest->enctime($row[0]);
 }
 $Seas->Startdate = $earliest;
 $Seas->Enddate = $latest;
@@ -122,15 +127,12 @@ for ($d = 1; $d < $ml; $d++)  {
 //  Also need to set referenced games to non-current.
 //  Delete unplayed games
 
-$ret = mysql_query("select ind from lgmatch");
-if (!$ret)  {
-	$mess = mysql_error();
-	include 'php/dataerror.php';
-	exit(0);
-}
+$ret = $Connection->query("SELECT ind FROM lgmatch");
+if (!$ret)
+	database_error($Connection->error);
 
 try {
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$matchind = $row[0];
 		$mtch = new Match($matchind);
 		$mtch->fetchdets();
@@ -154,38 +156,23 @@ try {
 	}
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/dataerror.php';
-	exit(0);
+	database_error($e->getMessage());
 }
 
 //  Now delete all unplayed games
 //  Delete all matches
 //  Delete all news items for stale matches
 
-mysql_query("delete from game where result='N'");
-mysql_query("delete from lgmatch");
-mysql_query("delete from news");
+$Connection->query("DELETE FROM game WHERE result='N'");
+$Connection->query("DELETE FROM lgmatch");
+$Connection->query("DELETE FROM news");
 
 // I think that just about does it. Create a news item
 
 $nws = new News('ADMINS', "Season now closed and archived as $Sname.", true, "league.php");
 $nws->addnews();
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "End of season complete";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>End of season complete</h1>
-<?php
+lg_html_header("End of season complete");
+lg_html_nav();
 $Sname = htmlspecialchars($Sname);
 print <<<EOT
 <p>Cleared and archived the season as $Sname.</p>
@@ -208,8 +195,5 @@ else {
 
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

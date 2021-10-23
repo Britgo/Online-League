@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,18 +20,15 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "General Information";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("General Information");
+lg_html_nav();
+print <<<EOT
 <h1>Information about the league</h1>
 <h2>Organisation</h2>
 <p>The BGA League Tournament is a team tournament, played online over the course of each year, almost entirely on the
@@ -78,7 +81,7 @@ in the first full season of the Individual Leauge, was tragically killed whilst 
 <p>You can see the current league standings and historical records using the menu items to the left, together with historical records.
 In the majority of cases you can download and review the actual games. For any further questions, please contact the Online League
 coordinators at online-league AT britgo DOT org (without the hyphen).</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

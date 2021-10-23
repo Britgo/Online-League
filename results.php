@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -22,16 +30,11 @@ include 'php/player.php';
 include 'php/team.php';
 include 'php/match.php';
 include 'php/matchdate.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Results for completed matches";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("Results for completed matches");
+lg_html_nav();
+print <<<EOT
 <h1>Results for completed matches</h1>
 <p>The following results are available. Bold indicates the winning team. Click on any
 entry to see the individual scores and in some cases game scores.</p>
@@ -42,11 +45,12 @@ entry to see the individual scores and in some cases game scores.</p>
 <th>Team B</th>
 <th>Score</th>
 </tr>
-<?php
-$ret = mysql_query("select ind from lgmatch where result='H' or result='A' order by divnum,matchdate,hteam,ateam");
-if ($ret && mysql_num_rows($ret) > 0)  {
+
+EOT;
+$ret = $Connection->query("SELECT ind FROM lgmatch WHERE result='H' OR result='A' ORDER BY divnum,matchdate,hteam,ateam");
+if ($ret && $ret->num_rows > 0)  {
 	$lastdiv = -99;
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$ind = $row[0];
 		$mtch = new Match($ind);
 		$mtch->fetchdets();
@@ -77,12 +81,12 @@ EOT;
 else {
 	print "<tr><td colspan=\"4\" align=\"center\">No matches yet</td></tr>\n";
 }
-?>
+print <<<EOT
 </table>
 <h2>Previous Seasons</h2>
 <p><a href="league.php">Click here</a> to view the league
 table and/or league tables and matches from previous seasons.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

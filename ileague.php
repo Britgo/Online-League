@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,11 +32,13 @@ include 'php/params.php';
 include 'php/itrecord.php';
 include 'php/season.php';
 
-$mention = $logged_in;
-if ($logged_in)  {
+$Connection = opendatabase();
+$mention = $Connection->logged_in;
+
+if ($mention)  {
 	try {
 		$player = new Player();
-		$player->fromid($userid);
+		$player->fromid($Connection->userid);
 		if ($player->ILdiv != 0)
 			$mention = false;
 	}
@@ -36,20 +46,15 @@ if ($logged_in)  {
 		$mention = false;
 	}
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Individual League Standings";
-include 'php/head.php';
-?>
-<body class="il">
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+lg_html_header("Individual League Standings", "il");
+lg_html_nav();
+print <<<EOT
 <h1>Current Individual League Standings</h1>
 <p>Click <a href="#prev">here</a> to view previous seasons.</p>
 <div align="center">
-<?php
+
+EOT;
 $pars = new Params();
 $pars->fetchvalues();
 $ml = max_ildivision();
@@ -72,9 +77,9 @@ EOT;
 		$p->get_scores($pars);
 	}
 	usort($pl, 'ilscore_compare');
-	
+
 	// Insert column header
-	
+
 	foreach ($pl as $p)  {
 		print "<th>{$p->display_initials()}</th>\n";
 	}
@@ -125,30 +130,27 @@ EOT;
 	if ($d != $ml)
 		print "<br><br><br>\n";
 }
-?>
+print <<<EOT
 </div>
 <p>Key to above: Matches <b>P</b>layed, <b>W</b>on, <b>D</b>rawn, <b>L</b>ost.
-<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.
-</p>
-<?php
+<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.</p>
+
+EOT;
+
 if ($mention)
 	print <<<EOT
 <h2>Joining the Individual League</h2>
 <p>Just select Update Account from <a href="ownupd.php">here</a>
-or the left menu and check the box to join the individual league.
-</p>
+or the left menu and check the box to join the individual league.</p>
 <p>You will (at this stage) be put into the division with players nearest your ranking,
-so please make sure that your ranking is correct first.
-</p>
+so please make sure that your ranking is correct first.</p>
 <p>There is no obligation to play a lot of games so please play as many or as few as you like,
-but please try to vary who you play with as much as you can.
-</p>
+but please try to vary who you play with as much as you can.</p>
 
-EOT;
-?>
 <h2>Previous Seasons</h2>
 <a name="prev"></a>
-<?php
+
+EOT;
 $seasons = list_seasons('I');
 if (count($seasons) == 0) {
 	print <<<EOT
@@ -181,8 +183,5 @@ EOT;
 	}
 	print "</table>\n";
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -17,8 +23,9 @@
 // This is for when an admin wants to edit the match details - members of
 // teams selected on each side for a match
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -28,6 +35,8 @@ include 'php/teammemb.php';
 include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/game.php';
+
+$Connection = opendatabase(true);
 $mtch = new Match();
 try  {
 	$mtch->fromget();
@@ -36,19 +45,11 @@ try  {
 	$mtch->fetchgames();
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Edit Match";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+
+lg_html_header("Eedit Match");
+print <<<EOT
 <script language="javascript">
 function checkteamsvalid() {
 	var 	form = document.matchform;
@@ -87,12 +88,12 @@ function checkteamsvalid() {
 			}
 		}
 	}
-	return true;		
+	return true;
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+EOT;
+
+lg_html_nav();
 
 // Load members of team and at the same time check we've got enough
 
@@ -103,15 +104,12 @@ function checkteam($team) {
 <h1>Edit Match</h1>
 <p>
 Sorry but there are not enough members in {$team->display_name()} yet to
-make up a match with.
-</p>
+make up a match with.</p>
 <p>Please <a href="javascript:history.back()">click here</a> to go back
 or <a href="teamsupd.php">here</a> to update teams.</p>
-</div>
-</div>
-</body>
-</html>
+
 EOT;
+		lg_html_footer();
 		exit(0);
 	}
 	foreach ($result as $p) {
@@ -122,9 +120,11 @@ EOT;
 
 $Htmemb = checkteam($mtch->Hteam);
 $Atmemb = checkteam($mtch->Ateam);
-?>
+print <<<EOT
 <h1>Edit Match</h1>
-<?php
+
+EOT;
+
 // Output select team member and if recorded display W or B
 
 function selectmemb($ha, $n, $mch, $team, $membs) {
@@ -132,10 +132,10 @@ function selectmemb($ha, $n, $mch, $team, $membs) {
 	$matchm = false;
 	if (count($mch->Games) > $n)  {
 		$g = $mch->Games[$n];
-		
+
 		//  We might have half-allocated teams in which case
 		//  the White or Black team is not defined
-		
+
 		if ($g->Wteam && $g->Wteam->is_same($team))  {
 			$matchm = $g->Wplayer;
 			$colour = 1;
@@ -153,8 +153,7 @@ function selectmemb($ha, $n, $mch, $team, $membs) {
 
 	if ($readonly) {
 		print <<<EOT
-<td>
-{$matchm->display_name(false)} ({$matchm->display_rank()})
+<td>{$matchm->display_name(false)} ({$matchm->display_rank()})
 <input type="hidden" name="$ha$n" value="{$matchm->selof()}">
 </td>
 
@@ -162,7 +161,7 @@ EOT;
 	}
 	else  {
 		print <<<EOT
-<td>	
+<td>
 <select name="$ha$n"$readonly>
 <option value="-">-</option>
 
@@ -171,7 +170,7 @@ EOT;
 			$val = $memb->selof();
 			$selms = $matchm && $matchm->is_same($memb)? " selected": "";
 			print <<<EOT
-<option value="$val"$selms>		
+<option value="$val"$selms>
 {$memb->display_name(false)} ({$memb->display_rank()})
 </option>
 
@@ -187,12 +186,8 @@ EOT;
 }
 
 print <<<EOT
-<p>
-This match is between
-{$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
-and
-{$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()}).
-</p>
+<p>This match is between {$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
+and {$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()}).</p>
 <form name="matchform" action="updmatch2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return checkteamsvalid()">
 {$mtch->save_hidden()}
 <p>
@@ -200,17 +195,16 @@ EOT;
 $mtch->Date->dateopt("Date set for");
 print "with";
 $mtch->slackdopt();
-?>
+print <<<EOT
 days to play the games.</p>
 <table class="updmatch">
 <tr><th colspan="3" align="center">Player assignments</th></tr>
-<?php
-print <<<EOT
 <tr>
 <th align="center">{$mtch->Hteam->display_name()}</th>
 <th align="center">Colours</th>
 <th align="center">{$mtch->Ateam->display_name()}</th>
 </tr>
+
 EOT;
 $cols = array("Nigiri", "White-Black", "Black-White");
 $played = 0;
@@ -235,7 +229,7 @@ EOT;
 		}
 		print "</select></td>\n";
 	}
-	selectmemb("atm", $row, $mtch, $mtch->Ateam, $Atmemb);		
+	selectmemb("atm", $row, $mtch, $mtch->Ateam, $Atmemb);
 	print "</tr>\n";
 }
 print "</table>\n";
@@ -244,40 +238,23 @@ if ($played == 0)
 else
 	$played = " checked readonly";
 print <<<EOT
-<p>
-<input type="checkbox" name="forceass"$played>
-<b>Check this</b> to force board assignments and colours rather than sorting into rank order.
-</p>
-EOT;
-?>
-<p>
-Make any adjustments and
-<input type="submit" value="Click here"> or <input type="reset" value="Reset form">
-</p>
-<p>
-Set colours to "Nigiri" throughout to randomly pick a colour which will be assigned to boards
-1 and 3 and the opposite to board 2.
-</p>
+<p><input type="checkbox" name="forceass"$played>
+<b>Check this</b> to force board assignments and colours rather than sorting into rank order.</p>
+<p>Make any adjustments and <input type="submit" value="Click here"> or <input type="reset" value="Reset form"></p>
+<p>Set colours to "Nigiri" throughout to randomly pick a colour which will be assigned to boards
+1 and 3 and the opposite to board 2.</p>
 </form>
 <h2>Defaulting whole matches</h2>
 <p>If you want to default a match please select one of the following. Note that this will
-wipe all game records already played so it's fairly irreversible! If you mean to just
-default a single game this is not the right place.
-</p>
-<?php
-print <<<EOT
+wipe all game records already played so it is fairly irreversible! If you mean to just
+default a single game this is not the right place.</p>
 <p>To default the match against {$mtch->Hteam->display_name()}
 and in favour of {$mtch->Ateam->display_name()},
-<a href="defaultmatch.php?{$mtch->urlof()}&w=H">click here</a>.
-</p>
+<a href="defaultmatch.php?{$mtch->urlof()}&w=H">click here</a>.</p>
 <p>To default the match against {$mtch->Ateam->display_name()}
 and in favour of {$mtch->Hteam->display_name()},
-<a href="defaultmatch.php?{$mtch->urlof()}&w=A">click here</a>.
-</p>
+<a href="defaultmatch.php?{$mtch->urlof()}&w=A">click here</a>.</p>
 
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

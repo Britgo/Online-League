@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -15,8 +21,9 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include 'php/checksecure.php';
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,35 +31,30 @@ include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
 
+$Connection = opendatabase(true);
+
 function apiapp(&$arr, $k, $v) {
 	array_push($arr, "$k=$v");
 }
 
 try {
 	$player = new Player();
-	$player->fromid($userid);
+	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 $sel = $_POST["actselect"];
 $amount = $_POST["amount"];
 
 $selarr = explode(':', $sel);
-if  (count($selarr) < 3)  {
-	$mess = "Unexpected POST input";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if  (count($selarr) < 3)
+   wrongentry("Unexpected POST input");
 
 switch  ($selarr[0])  {
 default:
-	$mess = "Do not know how to do {$selarr[0]} payments yet";
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry("Do not know how to do {$selarr[0]} payments yet");
 case  'T':
 	$type = 'T';
 	$teamname = $selarr[1];
@@ -70,111 +72,79 @@ case  'I':
 
 // Just check this makes sense
 
-if ($tot != $amount) {
-	$mess = "Total $tot does not match amount $amount";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if ($tot != $amount)
+   wrongentry("Total $tot does not match amount $amount");
 
 try {
 	if ($type == 'T')  {
 		$team = new Team($teamname);
 		$team->fetchdets();
-		
+
 		// Error if this team has paid
-		
-		if ($team->Paid)  {
-			$mess = "Team $teamname have already paid??";
-			include 'php/wrongentry.php';
-			exit(0);
-		}
+
+		if ($team->Paid)
+   		wrongentry("Team $teamname have already paid??");
 
 		// Check we haven't already got a pending payment for this team
-		
-		$ret = mysql_query("select ind from pendpay where league='T' and {$team->queryof('descr1')}");
-		if (!$ret)  {
-			$mess = mysql_error();
-			include 'php/dataerror.php';
-			exit(0);
-		}
-		if (mysql_num_rows($ret) > 0)  {
-			$mess = "Duplicated payment record for $teamname";
-			include 'php/probpay.php';
-			exit(0);
-		}
-		
+
+		$ret = $Connection->query("SELECT ind FROM pendpay WHERE league='T' and {$team->queryof('descr1')}");
+		if (!$ret)
+   		database_error($Connection->error);
+
+		if ($ret->num_rows > 0)
+			prob_pay("Duplicated payment record for $teamname");
+
 		// Create a payment record for the team
 		// We will have to update it with the token later
-		
-		$qteam = mysql_real_escape_string($teamname);
-		$ret = mysql_query("insert into pendpay (league,descr1,amount) values ('T','$qteam',$amount)");
-		if (!$ret)  {
-			$mess = mysql_error();
-			include 'php/dataerror.php';
-			exit(0);
-		}
-		
+
+		$qteam = $Connection->real_escape_string($teamname);
+		$ret = $Connection->query("INSERT INTO pendpay (league,descr1,amount) VALUES ('T','$qteam',$amount)");
+		if (!$ret)
+   		database_error($Connection->error);
+
 		$Pdescr = "Online Team League payment of subscription $amount GBP for $teamname";
 	}
 	else  {
 		$pplayer = new Player($first, $last);
 		$pplayer->fetchdets();
-		
+
 		// Error if this player has paid
-		
-		if ($pplayer->ILpaid)  {
-			$mess = "$first $last is already paid??";
-			include 'php/wrongentry.php';
-			exit(0);
-		}
+
+		if ($pplayer->ILpaid)
+   		wrongentry("$first $last is already paid??");
 
 		// Check we haven't already got a pending payment for this person
-		
-		$ret = mysql_query("select ind from pendpay where league='I' and descr1='{$pplayer->queryfirst()}' and descr2='{$pplayer->querylast()}'");
-		if (!$ret)  {
-			$mess = mysql_error();
-			include 'php/dataerror.php';
-			exit(0);
-		}
-		if (mysql_num_rows($ret) > 0)  {
-			$mess = "Duplicated payment record for $first $last";
-			include 'php/probpay.php';
-			exit(0);
-		}
-		
+
+		$ret = $Connection->query("SELECT ind FROM pendpay WHERE league='I' and descr1='{$pplayer->queryfirst()}' and descr2='{$pplayer->querylast()}'");
+		if (!$ret)
+   		database_error($Connection->error);
+
+		if ($ret->num_rows > 0)
+			prob_pay("Duplicated payment record for $first $last");
+
 		// Create a payment record for the person
 		// We will have to update it with the token later
-		
-		$qfirst = mysql_real_escape_string($first);
-		$qlast = mysql_real_escape_string($last);
-		$ret = mysql_query("insert into pendpay (league,descr1,descr2,amount) values ('I','$qfirst','$qlast',$amount)");
-		if (!$ret)  {
-			$mess = mysql_error();
-			include 'php/dataerror.php';
-			exit(0);
-		}
-		
+
+		$qfirst = $Connection->real_escape_string($first);
+		$qlast = $Connection->real_escape_string($last);
+		$ret = $Connection->query("INSERT INTO pendpay (league,descr1,descr2,amount) VALUES ('I','$qfirst','$qlast',$amount)");
+		if (!$ret)
+   		database_error($Connection->error);
+
 		$Pdescr = "Online Individual League payment of subscription $amount GBP for $first $last";
 	}
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
-$ret = mysql_query("select last_insert_id()");
-if (!$ret || mysql_num_rows($ret) == 0)  {
-	$mess = "Cannot get insert id";
-	include 'php/dataerror.php';
-	exit(0);
-}
-$row = mysql_fetch_array($ret);
+$ret = $Connection->query("SELECT last_insert_id()");
+if (!$ret || $ret->num_rows == 0)
+   database_error("Cannot get insert id");
+$row = $ret->fetch_array();
 $ind = $row[0];
 
 // OK now we are ready to do the PayPal stuff.
@@ -205,11 +175,8 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 curl_setopt($ch, CURLOPT_POST, 1);
 curl_setopt($ch, CURLOPT_POSTFIELDS, join('&', $Req_array));
 $chresp = curl_exec($ch);
-if  (!$chresp)  {
-	$mess = "Curl failed: " . curl_error($ch) . " (" . curl_errno($ch) . ")";
-	include 'php/probpay.php';
-	exit(0);
-}
+if  (!$chresp)
+	prob_pay("Curl failed: " . curl_error($ch) . " (" . curl_errno($ch) . ")");
 
 // Make an array of the response
 
@@ -225,17 +192,15 @@ foreach ($responses as $r) {
 
 $ret = strtoupper($parsedresp["ACK"]);
 if ($ret != 'SUCCESS' && $ret != "SUCCESSWITHWARNING")  {
-	$mess = "API error in Set Express Checkout";
-	mysql_query("delete from pendpay where ind=$ind");
-	include 'php/probpay.php';
-	exit(0);
+	$Connection->query("DELETE FROM pendpay WHERE ind=$ind");
+	prob_pay("API error in Set Express Checkout", $parsedresp);
 }
 
 // Get token from response and put into pending payment record
 
 $tok = $parsedresp["TOKEN"];
-$qtok = mysql_real_escape_string($tok);
-mysql_query("update pendpay set token='$qtok' where ind=$ind");
+$qtok = $Connection->real_escape_string($tok);
+$Connection->query("UPDATE pendpay SET token='$qtok' WHERE ind=$ind");
 
 // Now for stage 2, invoke PayPal with the token
 

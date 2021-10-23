@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,33 +20,30 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 
+$Connection = opendatabase(true);
+
 function checkclash($column, $value) {
 	if (strlen($value) == 0)
 		return;
-	$qvalue = mysql_real_escape_string($value);
-	$ret = mysql_query("select $column from team where $column='$qvalue'");
-	if ($ret && mysql_num_rows($ret) != 0)  {
-		include 'php/nameclash.php';
-		exit(0);
-	}
+	$qvalue = $Connection->real_escape_string($value);
+	$ret = $Connection->query("SELECT $column FROM team WHERE $column='$qvalue'");
+	if ($ret && $ret->num_rows != 0)
+		clash_item($column, $value);
 }
 
 function checkname($newteam) {
-	$ret = mysql_query("select name from team where {$newteam->queryof()}");
-	if ($ret && mysql_num_rows($ret) != 0)  {
-		$column = "name";
-		$value = $newteam->display_name();
-		include 'php/nameclash.php';
-		exit(0);
-	}
+	$ret = $Connection->query("SELECT name FROM team WHERE {$newteam->queryof()}");
+	if ($ret && $ret->num_rows != 0)
+		clash_item("Team name", $newteam->display_name());
 }
 
 $action = substr($_POST["subm"], 0, 1);
@@ -49,21 +52,16 @@ $teamdescr = $_POST["teamdescr"];
 $teamdiv = $_POST["division"];
 $teamcapt = $_POST["captain"];
 
-if (!preg_match("/(.*):(.*)/", $teamcapt, $matches))  {
-		include 'php/wrongentry.php';
-		exit(0);
-}
+if (!preg_match("/(.*):(.*)/", $teamcapt, $matches))
+	wrongentry("Mp te, ma,e");
 
 $captfirst = $matches[1];
 $captlast = $matches[2];
 
 switch ($action) {
 case 'A':
-	if (strlen($teamname) == 0)  {
-		$mess = "No team name?";
-		include 'php/wrongentry.php';
-		exit(0);
-	}
+	if (strlen($teamname) == 0)
+   	wrongentry("No team name?");
 	$team = new Team($teamname);
 	checkname($team);
 	$team->Description = $teamdescr;
@@ -79,19 +77,17 @@ default:
 		$origteam->fetchdets();
 	}
 	catch (TeamException $e) {
-		$mess = $e->getMessage();
-		include 'php/wrongentry.php';
-		exit(0);
+	   wrongentry($e->getMessage());
 	}
-	
+
 	// Check name changes
-	
+
 	$newteam = new Team($teamname);
 	if  (!$origteam->is_same($newteam))  {
 		checkname($newteam);
 		$origteam->updatename($newteam);
 	}
-	
+
 	$origteam->Description = $teamdescr;
 	$origteam->Division = $teamdiv;
 	$origteam->Captain = new Player($captfirst, $captlast);
@@ -99,26 +95,13 @@ default:
 	$Title = "Team {$origteam->display_name()} updated OK";
 	break;
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Team update complete";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+lg_html_header($Title);
+lg_html_nav();
 print <<<EOT
 <h1>$Title</h1>
 <p>$Title.</p>
+<p>Click <a href="teamsupd.php">here</a> to return to the team update menu.</p>
 
 EOT;
+lg_html_footer();
 ?>
-<p>Click <a href="teamsupd.php">here</a> to return to the team update menu.</p>
-</div>
-</div>
-</body>
-</html>

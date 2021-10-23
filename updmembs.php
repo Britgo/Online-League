@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,23 +20,24 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
+
+$Connection = opendatabase(true);
 try {
 	$team = new Team();
 	$team->fromget();
 	$team->fetchdets();
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 // Slurp up player names until we can't find any more
@@ -58,30 +65,17 @@ try {
 	}
 }
 catch (TeamMembException $e) {
-	$mess = $e->getMessage();
-	include 'php/dataerror.php';
-	exit(0);
+   database_error($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
+
 $Title = "Updated Team Members for {$team->display_name()}";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+lg_html_header($Title);
+lg_html_nav();
 print <<<EOT
-<h1>Update of {$team->display_name()} complete</h1>
+<h1>$Title</h1>
 <p>Updating team members for {$team->display_description()} is complete.</p>
+<p>Click <a href="teamsupd.php">here</a> to resume editing teams.</p>
 
 EOT;
+lg_html_footer();
 ?>
-<p>Click <a href="teamsupd.php">here</a> to resume editing teams.</p>
-</div>
-</div>
-</body>
-</html>

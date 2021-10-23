@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,13 +20,16 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
+include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
-include 'php/opendatabase.php';
+
+$Connection = opendatabase(true);
 
 $subj = $_POST["subject"];
 $emailrep = $_POST["emailrep"];
@@ -64,22 +73,12 @@ foreach (array_keys($mlist) as $dest) {
 	fwrite($fh, "$mess\n");
 	pclose($fh);
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Message Sent to team captains";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+lg_html_header("Message Sent to team captains");
+lg_html_nav();
+print <<<EOT
 <h1>Message sent to team captains</h1>
 <p>I think your message was sent OK to team captains.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

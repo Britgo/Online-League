@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -40,11 +46,11 @@ function num_unread_msgs() {
 	global $userid;
 	if (strlen($userid) == 0)
 		return 0;
-	$quser = mysql_real_escape_string($userid);
-	$ret = mysql_query("select count(*) from message where touser='$quser' and hasread=0");
-	if (!$ret || mysql_num_rows($ret) == 0)
+	$quser = $Connection->real_escape_string($userid);
+	$ret = $Connection->query("SELECT COUNT(*) FROM message WHERE touser='$quser' and hasread=0");
+	if (!$ret || $ret->num_rows == 0)
 		return 0;
-	$row = mysql_fetch_array($ret);
+	$row = $ret->fetch_array();
 	return $row[0] + 0;
 }
 ?>

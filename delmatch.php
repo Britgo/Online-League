@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -23,6 +31,9 @@ include 'php/player.php';
 include 'php/team.php';
 include 'php/matchdate.php';
 include 'php/match.php';
+
+$Connection = opendatabase(true);
+
 $mtch = new Match();
 try  {
 	$mtch->fromget();
@@ -31,40 +42,20 @@ try  {
 	$mtch->delmatch();
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Delete match completed";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Delete Match Completed</h1>
-<?php
+
+lg_html_header("Delete match completed");
+lg_html_nav();
 print <<<EOT
-<p>
-Successfully completed deletion of Match between
+<h1>Delete Match Completed</h1>
+<p>Successfully completed deletion of Match between
 {$mtch->Hteam->display_name()} and
 {$mtch->Ateam->display_name()} set for
-{$mtch->Date->display()}.
-</p>
-<p>
-<a href="matchtmupd.php?div={$mtch->Division}" title="Go back to editing matches">Click here</a> to go back
-to editing matches for division {$mtch->Division}.
-</p>
+{$mtch->Date->display()}.</p>
+<p><a href="matchtmupd.php?div={$mtch->Division}" title="Go back to editing matches">Click here</a> to go back
+to editing matches for division {$mtch->Division}.</p>
 
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

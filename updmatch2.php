@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -30,6 +37,7 @@ include 'php/params.php';
 include 'php/hcp_message.php';
 include 'php/mailalloc.php';
 
+$Connection = opendatabase(true);
 $pars = new Params();
 $pars->fetchvalues();
 
@@ -41,9 +49,7 @@ try  {
 	$mtch->fetchgames();
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 
 // Set if handicaps apply to this division
@@ -92,23 +98,18 @@ try {
 	}
 }
 catch  (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 
-if ($forcing && (!$colset || $hadnig))  {
-	$mess = "Colours not set up";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if ($forcing && (!$colset || $hadnig))
+   wrongentry("Colours not set up");
 
 // If colours not set, sort players into rank order and assign
-// otherwise set nigiri randomly 
+// otherwise set nigiri randomly
 
 if ($colset)  {
 	//  Colours set - if had nigiri try to make at least one different
-	
+
 	if ($hadnig)  {
 		if ($hadw && $hadb) {
 			// Had both white and black - if middle one nigiri choose at random
@@ -137,12 +138,12 @@ if ($colset)  {
 else {
 
 	// So now we sort each team into order
-	
+
 	sortrank($hplayer, $pars->Rankfuzz);
 	sortrank($aplayer, $pars->Rankfuzz);
 
 	//  Now assign colours either WBW or BWB
-	
+
 	$cols[0] = rand(1,2);
 	$cols[1] = 3 - $cols[0];
 	$cols[2] = $cols[0];
@@ -193,7 +194,7 @@ function setgteams($g, $col, $hteam, $ateam, $hplay, $aplay)  {
 }
 
 // Get and create or update each game
- 
+
 $gnum = $mtch->ngames();
 
 for ($gm = 0;  $gm < 3;  $gm++)  {
@@ -208,41 +209,24 @@ for ($gm = 0;  $gm < 3;  $gm++)  {
 	}
 	else  {
 		$g = $mtch->newgame();
-		setgteams($g, $cols[$gm], $mtch->Hteam, $mtch->Ateam, $hplayer[$gm], $aplayer[$gm]);		
+		setgteams($g, $cols[$gm], $mtch->Hteam, $mtch->Ateam, $hplayer[$gm], $aplayer[$gm]);
 		$g->create_game();
 	}
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Match Edit Result";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Match Edit Result</h1>
-<p>
-Match is set up between
-<?php
+lg_html_header("Match edit result");
+lg_html_nav();
 print <<<EOT
-{$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
-and
-{$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()})
-on
-{$mtch->Date->display()} with {$mtch->Slackdays} days to play the games.
-</p>
+<h1>Match Edit Result</h1>
+<p>Match is set up between {$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
+and {$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()})
+on {$mtch->Date->display()} with {$mtch->Slackdays} days to play the games.</p>
 <p>Team captains are {$mtch->Hteam->display_captain()} for {$mtch->Hteam->display_name()}
-and {$mtch->Ateam->display_captain()} for {$mtch->Ateam->display_name()}.
-</p>
+and {$mtch->Ateam->display_captain()} for {$mtch->Ateam->display_name()}.</p>
 <p>Player assignments are as follows:</p>
 <table>
 <tr><th colspan="4" align="center">White</th><th colspan="4" align="center">Black</th><th>Result</th></tr>
 <tr><th>Player</th><th>Rank</th><th>Online</th><th>Team</th><th>Player</th><th>Rank</th><th>Online</th><th>Team</th></tr>
+
 EOT;
 foreach ($mtch->Games as $g) {
 	switch ($g->Result) {
@@ -271,16 +255,17 @@ foreach ($mtch->Games as $g) {
 <td>{$g->Bteam->display_name()}</td>
 <td>$res</td>
 </tr>
+
 EOT;
 }
+
 mail_allocated($mtch, $pars, true);
+
 print <<<EOT
 </table>
 <p>Click <a href="updmatch.php?{$mtch->urlof()}">here</a> to change any details of the match.</p>
-EOT;
-?>
 <p>Click <a href="matchupd.php">here</a> to edit some other match.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

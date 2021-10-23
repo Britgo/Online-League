@@ -1,11 +1,12 @@
 <?php
 
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -22,34 +23,34 @@
 
 class Histteam extends Teambase {
 	public $Seas;			// Season object
-	
+
 	public function __construct($s, $n = "") {
 		parent::__construct($n);
 		$this->Seas = $s;
 	}
-	
+
 	public function fromget() {
 		parent::fromget("htn");
 	}
 
 	public function queryof($colname = "name") {
-		$qn = mysql_real_escape_string($this->Name);
+		$qn = $Connection->real_escape_string($this->Name);
 		return "$colname='$qn' and seasind={$this->Seas->Ind}";
 	}
-	
+
 	public function urlof() {
 		$n = urlencode($this->Name);
 		return "htn=$n";
 	}
-	
+
 	public function fetchdets() {
 		$q = $this->queryof();
-		$ret = mysql_query("select description,divnum,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg from histteam where $q");
+		$ret = $Connection->query("SELECT description,divnum,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg FROM histteam WHERE $q");
 		if (!$ret)
 			throw new TeamException("Cannot read database for histteam {$this->Name}");
-		if (mysql_num_rows($ret) == 0)
+		if ($ret->num_rows == 0)
 			throw new TeamException("Cannot find histteam {$this->Name}");
-		$row = mysql_fetch_assoc($ret);
+		$row = $ret->fetch_assoc();
 		$this->Description = $row["description"];
 		$this->Division = $row["divnum"];
 		$this->Playing = $row["playing"];
@@ -63,8 +64,8 @@ class Histteam extends Teambase {
 		$this->Lostg = $row["lostg"];
 	}
 	public function create() {
-		$qname = mysql_real_escape_string($this->Name);
-		$qdescr = mysql_real_escape_string($this->Description);
+		$qname = $Connection->real_escape_string($this->Name);
+		$qdescr = $Connection->real_escape_string($this->Description);
 		$qdiv = $this->Division;
 		$qseas = $this->Seas->Ind;
 		$qplaying = $this->Playing? 1: 0;
@@ -77,40 +78,40 @@ class Histteam extends Teambase {
 		$qdrawng = $this->Drawng;
 		$qlostg = $this->Lostg;
 		// Delete any team with the same name for the season
-		mysql_query("delete from histteam where {$this->Seas->queryof()} and name='$qname'");
+		$Connection->query("DELETE FROM histteam WHERE {$this->Seas->queryof()} and name='$qname'");
 		$cols = "(name,description,divnum,seasind,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg)";
 		$vals = "('$qname','$qdescr',$qdiv,$qseas,$qplaying,$qsortrank,$qplayedm,$qwonm,$qdrawnm,$qlostm,$qwong,$qdrawng,$qlostg)";
-		if (!mysql_query("insert into histteam $cols values $vals"))
-			throw new TeamException(mysql_error());
+		if (!$Connection->query("INSERT INTO histteam $cols VALUES $vals"))
+			throw new TeamException($Connection->error);
 	}
-	
+
 	public function count_members() {
-		$ret = mysql_query("select count(*) from histteammemb where {$this->queryof('teamname')}");
-		if (!$ret || mysql_num_rows($ret) == 0)
+		$ret = $Connection->query("SELECT COUNT(*) FROM histteammemb WHERE {$this->queryof('teamname')}");
+		if (!$ret || $ret->num_rows == 0)
 			return 0;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	
+
 	public function list_members($order = "rank desc,tmlast,tmfirst") {
-		$ret = mysql_query("select tmfirst,tmlast from histteammemb where {$this->queryof('teamname')} order by $order");
+		$ret = $Connection->query("SELECT tmfirst,tmlast FROM histteammemb WHERE {$this->queryof('teamname')} ORDER BY $order");
 		$result = array();
 		if ($ret) {
-			while ($row = mysql_fetch_array($ret)) {
+			while ($row = $ret->fetch_array()) {
 				array_push($result, new HistteamMemb($this, $row[0], $row[1]));
 			}
 		}
-		return $result;			
+		return $result;
 	}
 
 	private function getcount($q) {
-		$ret = mysql_query("select count(*) from histmatch where {$this->Seas->queryof()} and $q");
-		if (!$ret || mysql_num_rows($ret) == 0)
+		$ret = $Connection->query("SELECT COUNT(*) FROM histmatch WHERE {$this->Seas->queryof()} and $q");
+		if (!$ret || $ret->num_rows == 0)
 			return  0;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	
+
 	public function record_against($opp) {
 		$res = new itrecord();
 		if ($this->is_same($opp))
@@ -131,10 +132,10 @@ class Histteam extends Teambase {
 function hist_list_teams($s, $div = 0, $order = "name", $pl = 1) {
 	$divsel = $div == 0? "": " and divnum=$div";
 	$i = $s->Ind;
-	$ret = mysql_query("select name from histteam where playing=$pl and seasind=$i$divsel order by $order");
+	$ret = $Connection->query("SELECT name FROM histteam WHERE playing=$pl and seasind=$i$divsel ORDER BY $order");
 	$result = array();
 	if ($ret) {
-		while ($row = mysql_fetch_array($ret)) {
+		while ($row = $ret->fetch_array()) {
 			array_push($result, new Histteam($s, $row[0]));
 		}
 	}
@@ -142,12 +143,12 @@ function hist_list_teams($s, $div = 0, $order = "name", $pl = 1) {
 }
 
 function hist_max_division($s) {
-	$ret = mysql_query("select max(divnum) from histteam where playing=1 and seasind={$s->Ind}");
-	if ($ret && mysql_num_rows($ret) > 0) {
-		$row = mysql_fetch_array($ret);
+	$ret = $Connection->query("SELECT max(divnum) FROM histteam WHERE playing=1 and seasind={$s->Ind}");
+	if ($ret && $ret->num_rows > 0) {
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	return 1;	
+	return 1;
 }
 
 function hist_score_compare($teama, $teamb) {
@@ -155,5 +156,5 @@ function hist_score_compare($teama, $teamb) {
 	if ($teama->Sortrank != $teamb->Sortrank)
 		return $teama->Sortrank > $teamb->Sortrank? -1: 1;
 	return strcasecmp($teama->Name, $teamb->Name);
-}	
+}
 ?>

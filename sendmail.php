@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -16,12 +22,15 @@
 
 //   No frame-ish stuff - done in new window
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/club.php';
+
+$Connection = opendatabase(true);
 try {
 	$via = $_GET["via"];
 	switch ($via) {
@@ -42,24 +51,13 @@ try {
 	}
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 catch (ClubException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Send a message to $name";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+lg_html_header("Send a message to $name");
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -75,7 +73,9 @@ function formvalid()
 		return true;
 }
 </script>
-<?php
+
+EOT;
+lg_html_nav();
 print <<<EOT
 <h1>Send a message to $name</h1>
 <p>Please use the form below to compose a message to $name.</p>
@@ -84,13 +84,13 @@ print <<<EOT
 <form name="mailform" action="sendmail2.php" method="post" enctype="application/x-www-form-urlencoded"  onsubmit="javascript:return formvalid();">
 <input type="hidden" name="via" value="$via">
 $hidden
-EOT;
-?>
 <p>Subject:<input type="text" name="subject"></p>
 <p>Reply to:<input type="text" name="emailrep"></p>
 <textarea name="messagetext" rows="10" cols="40"></textarea>
 <br clear="all">
 <input type="submit" name="submit" value="Submit message">
 </form>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

@@ -12,7 +12,7 @@ function mail_player($board, $pl, $pt, $pc, $col, $opp, $ot, $hcp)
 		$rt = "REPLYTO='$oppemail' ";
 	else
 		$rt = "REPLYTO='DO_NOT_REPLY_TO_THIS_ADDRESS@britgo.org' ";
-	
+
 	$fhh = popen("{$rt}mail -s 'Go League match assignment' {$pl->Email}", "w");
 	$oppname = $opp->display_name(false);
 	$mess = <<<EOT
@@ -61,10 +61,10 @@ EOT;
 function mail_allocated($mtch, $pars, $byadmin = false) {
 
 	// We shouldn't get here without it being allocated but return if we are
-	
+
 	if (!$mtch->is_allocated())
 			return;
-	
+
 	// Get hold of the first and second teams and their captains
 
 	$ht = $mtch->Hteam;
@@ -83,7 +83,7 @@ function mail_allocated($mtch, $pars, $byadmin = false) {
 		$suam = "set up";
 		$stm = "Completed";
 	}
-		
+
 	$fh = popen("mail -s 'Go League match $suam' online-league@britgo.org {$hc->Email} {$ac->Email}", "w");
 	$mess = <<<EOT
 $stm allocation of players to match in division {$mtch->Division} for {$mtch->Date->display_month()} between
@@ -91,9 +91,9 @@ $stm allocation of players to match in division {$mtch->Division} for {$mtch->Da
 
 Allocation is:
 EOT;
-	fwrite($fh, "$mess\n");	
-	
-	$board = 1;	
+	fwrite($fh, "$mess\n");
+
+	$board = 1;
 	foreach ($games as $g) {
 		$wp = $g->Wplayer;
 		$bp = $g->Bplayer;
@@ -122,7 +122,7 @@ EOT;
 		else {
 			$hcp = hcp_message($g, $pars);
 			if ($hcp)
-				fwrite($fh, "Game is played with $hcp\n");		
+				fwrite($fh, "Game is played with $hcp\n");
 			$hreason = mail_player($board, $hp, $ht, $hc, $hcol, $ap, $at, $hcp);
 			$areason = mail_player($board, $ap, $at, $ac, $acol, $hp, $ht, $hcp);
 			if (strlen($hreason) != 0)  {

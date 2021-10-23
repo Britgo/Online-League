@@ -1,11 +1,12 @@
 <?php
 
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -28,41 +29,45 @@ class Team extends Teambase  {
 	public $Nonbga;		// Number of non-BGA members
 	public $Subs;			// Subscription
 	public $Playing;		// Playing
-	
+
 	public function __construct($n = "") {
 		parent::__construct($n);
 		$this->Subs = 0;
 		$this->Nonbga = 0;
 	}
-	
-	public function fromget() {
+
+	// Argument here not actually used but need to be consistent with parent version
+
+	public function fromget($gf = NULL) {
 		parent::fromget("tn");
 	}
 
 	public function frompost($prefix = "") {
 		$this->Name = $_POST["${prefix}tn"];
 		if (strlen($this->Name) == 0)
-			throw new TeamException("Null post name field"); 
-	}				
-	
+			throw new TeamException("Null post name field");
+	}
+
 	public function queryof($colname = "name") {
-		$qn = mysql_real_escape_string($this->Name);
+		global $Connection;
+		$qn = $Connection->real_escape_string($this->Name);
 		return "$colname='$qn'";
 	}
-	
+
 	public function urlof($id = "tn") {
 		$n = urlencode($this->Name);
 		return "$id=$n";
 	}
-	
+
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
-		$ret = mysql_query("select description,divnum,captfirst,captlast,paid,playing from team where $q");
+		$ret = $Connection->query("SELECT description,divnum,captfirst,captlast,paid,playing FROM team WHERE $q");
 		if (!$ret)
 			throw new TeamException("Cannot read database for team $q");
-		if (mysql_num_rows($ret) == 0)
+		if ($ret->num_rows == 0)
 			throw new TeamException("Cannot find team {$this->Name}");
-		$row = mysql_fetch_assoc($ret);
+		$row = $ret->fetch_assoc();
 		$this->Description = $row["description"];
 		$this->Division = $row["divnum"];
 		$this->Paid = $row["paid"];
@@ -75,26 +80,26 @@ class Team extends Teambase  {
 			$this->Captain = new Player("Unknown", "Captain");
 		}
 	}
-	
+
 	// Overrides teambase version
-	
+
 	public function display_name($displink = false) {
 		$ret = htmlspecialchars($this->Name);
 		if ($displink)
 			return "<a href=\"teamdisp.php?{$this->urlof()}\" class=\"name\" title=\"Show team\">$ret</a>";
 		return $ret;
 	}
-	
+
 	// Trivial but room for expansion
-	
+
 	public function display_division() {
 		return $this->Division;
 	}
-	
+
 	public function display_captain($lnk = false) {
 		return $this->Captain->display_name($lnk);
 	}
-	
+
 	public function display_capt_email($l = true) {
 		if (!$l)
 			return "";
@@ -103,63 +108,68 @@ class Team extends Teambase  {
 			return "";
 		return $m;
 	}
-	
+
 	public function save_hidden($prefix = "") {
 		$f = $this->Name;
 		return "<input type=\"hidden\" name=\"${prefix}tn\" value=\"$f\">";
 	}
-	
+
 	public function create() {
-		$qname = mysql_real_escape_string($this->Name);
-		$qdescr = mysql_real_escape_string($this->Description);
+		$qname = $Connection->real_escape_string($this->Name);
+		$qdescr = $Connection->real_escape_string($this->Description);
 		$qcfirst = $this->Captain->queryfirst();
 		$qclast = $this->Captain->querylast();
 		$qdiv = $this->Division;
-		if (!mysql_query("insert into team (name,description,divnum,captfirst,captlast) values ('$qname','$qdescr',$qdiv,'$qcfirst','$qclast')"))
-			throw new TeamException(mysql_error());
+		if (!$Connection->query("INSERT INTO team (name,description,divnum,captfirst,captlast) VALUES ('$qname','$qdescr',$qdiv,'$qcfirst','$qclast')"))
+			throw new TeamException($Connection->error);
 	}
-	
+
 	public function updatename($newt) {
-		$qname = mysql_real_escape_string($newt->Name);
-		mysql_query("update team set name='$qname' where {$this->queryof()}");
+		global $Connection;
+		$qname = $Connection->real_escape_string($newt->Name);
+		$Connection->query("UPDATE team SET name='$qname' WHERE {$this->queryof()}");
 		// Need to change team in teammemb as well
-		mysql_query("update teammemb set teamname='$qname' where {$this->queryof('teamname')}");
+		$Connection->query("UPDATE teammemb SET teamname='$qname' WHERE {$this->queryof('teamname')}");
 		// Also reset any matches
-		mysql_query("update lgmatch set hteam='$qname' where {$this->queryof('hteam')}");
-		mysql_query("update lgmatch set ateam='$qname' where {$this->queryof('ateam')}");
+		$Connection->query("UPDATE lgmatch SET hteam='$qname' WHERE {$this->queryof('hteam')}");
+		$Connection->query("UPDATE lgmatch SET ateam='$qname' WHERE {$this->queryof('ateam')}");
 		// And games
-		mysql_query("update game set wteam='$qname' where {$this->queryof('wteam')} and current=1");
-		mysql_query("update game set bteam='$qname' where {$this->queryof('bteam')} and current=1");
+		$Connection->query("UPDATE game SET wteam='$qname' WHERE {$this->queryof('wteam')} AND current=1");
+		$Connection->query("UPDATE game SET bteam='$qname' WHERE {$this->queryof('bteam')} AND current=1");
 		$this->Name = $newt->Name;
 	}
 
 	public function update() {
-		$qdescr = mysql_real_escape_string($this->Description);
+		global $Connection;
+		$qdescr = $Connection->real_escape_string($this->Description);
 		$qcfirst = $this->Captain->queryfirst();
 		$qclast = $this->Captain->querylast();
 		$qdiv = $this->Division;
-		if (!mysql_query("update team set description='$qdescr',divnum=$qdiv,captfirst='$qcfirst',captlast='$qclast' where {$this->queryof()}"))
-			throw new TeamException(mysql_error());
+		if (!$Connection->query("UPDATE team SET description='$qdescr',divnum=$qdiv,captfirst='$qcfirst',captlast='$qclast' WHERE {$this->queryof()}"))
+			throw new TeamException($Connection->error);
 	}
-	
+
 	// Update division only for when we've not read in the lot
-	
+
 	public function updatediv($newdiv) {
-		if (!mysql_query("update team set divnum=$newdiv where {$this->queryof()}"))
-			throw new TeamException(mysql_error());
-		$this->Division = $newdiv;		
+		global $Connection;
+		if (!$Connection->query("UPDATE team SET divnum=$newdiv WHERE {$this->queryof()}"))
+			throw new TeamException($Connection->error);
+		$this->Division = $newdiv;
 	}
-	
+
 	public function setpaid($v = true) {
+		global $Connection;
 		$vv = $v? 1: 0;
-		mysql_query("update team set paid=$vv where {$this->queryof()}");
+		$Connection->query("UPDATE team SET paid=$vv WHERE {$this->queryof()}");
 	}
-	
+
 	public function setplaying($v = true) {
+		global $Connection;
 		$vv = $v? 1: 0;
-		mysql_query("update team set playing=$vv where {$this->queryof()}");
-	}	
-	
+		$Connection->query("UPDATE team SET playing=$vv WHERE {$this->queryof()}");
+	}
+
 	public function divopt() {
 		print "<select name=\"division\">\n";
 		$maxt = max_division() + 1; // Allow for 1 more than number of existing
@@ -171,7 +181,7 @@ class Team extends Teambase  {
 		}
 		print "</select>\n";
 	}
-	
+
 	public function captainopt() {
 		$plist = list_players();
 		print "<select name=\"captain\">\n";
@@ -184,15 +194,16 @@ class Team extends Teambase  {
 		}
 		print "</select>\n";
 	}
-	
-	public function get_n_from_matches($crit, $wot="count(*)") {
-		$ret = mysql_query("select $wot from lgmatch where $crit");
-		if (!$ret || mysql_num_rows($ret) == 0)
+
+	public function get_n_from_matches($crit, $wot="COUNT(*)") {
+		global $Connection;
+		$ret = $Connection->query("SELECT $wot FROM lgmatch WHERE $crit");
+		if (!$ret || $ret->num_rows == 0)
 			return 0;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	
+
 	public function get_scores($p = Null) {
 		$this->Playedm = $this->get_n_from_matches("result!='N' and result!='P' and ({$this->queryof('hteam')} or {$this->queryof('ateam')})");
 		$this->Wonm = $this->get_n_from_matches("({$this->queryof('hteam')} and result='H') or ({$this->queryof('ateam')} and result='A')");
@@ -207,7 +218,7 @@ class Team extends Teambase  {
 		if ($p)  {
 			$this->Sortrank = $this->Playedm * $p->Played +
 									$this->Wonm * $p->Won +
-									$this->Drawnm * $p->Drawn +	
+									$this->Drawnm * $p->Drawn +
 									$this->Lostm * $p->Lost +
 									$this->Wong * $p->Forg +
 									$this->Drawng * $p->Drawng +
@@ -216,36 +227,39 @@ class Team extends Teambase  {
 		}
 		return  0;
 	}
-	
+
 	public function count_members() {
-		$ret = mysql_query("select count(*) from teammemb where {$this->queryof('teamname')}");
-		if (!$ret || mysql_num_rows($ret) == 0)
+		global $Connection;
+		$ret = $Connection->query("SELECT COUNT(*) FROM teammemb WHERE {$this->queryof('teamname')}");
+		if (!$ret || $ret->num_rows == 0)
 			return 0;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	
+
 	public function list_members($order = "rank desc,tmlast,tmfirst") {
-		$ret = mysql_query("select tmfirst,tmlast from teammemb where {$this->queryof('teamname')} order by $order");
+		global $Connection;
+		$ret = $Connection->query("SELECT tmfirst,tmlast FROM teammemb WHERE {$this->queryof('teamname')} ORDER BY $order");
 		$result = array();
 		if ($ret) {
-			while ($row = mysql_fetch_array($ret)) {
+			while ($row = $ret->fetch_array()) {
 				array_push($result, new TeamMemb($this, $row[0], $row[1]));
 			}
 		}
-		return $result;			
+		return $result;
 	}
-	
+
 	private function getcount($q) {
-		$ret = mysql_query("select count(*) from lgmatch where $q");
-		if (!$ret || mysql_num_rows($ret) == 0)
+		global $Connection;
+		$ret = $Connection->query("SELECT COUNT(*) FROM lgmatch WHERE $q");
+		if (!$ret || $ret->num_rows == 0)
 			return  0;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	
+
 	// Get record for this team this season against opponent
-	
+
 	public function record_against($opp) {
 		$res = new itrecord();
 		if ($this->is_same($opp))
@@ -266,10 +280,11 @@ class Team extends Teambase  {
 // List teams a given player is captain of
 
 function list_teams_captof($player) {
+	global $Connection;
 	$result = array();
-	$ret = mysql_query("select name from team where {$player->queryof('capt')} order by name");
-	if ($ret and mysql_num_rows($ret) > 0)  {
-		while ($row = mysql_fetch_array($ret))  {
+	$ret = $Connection->query("SELECT name FROM team WHERE {$player->queryof('capt')} ORDER BY name");
+	if ($ret and $ret->num_rows > 0)  {
+		while ($row = $ret->fetch_array())  {
 			$team = new Team($row[0]);
 			$team->fetchdets();
 			array_push($result, $team);
@@ -279,11 +294,12 @@ function list_teams_captof($player) {
 }
 
 function list_teams($div = 0, $order = "name", $pl = 1) {
+	global $Connection;
 	$divsel = $div == 0? "": " and divnum=$div";
-	$ret = mysql_query("select name from team where playing=$pl$divsel order by $order");
+	$ret = $Connection->query("SELECT name FROM team WHERE playing=$pl$divsel ORDER BY $order");
 	$result = array();
 	if ($ret) {
-		while ($row = mysql_fetch_array($ret))
+		while ($row = $ret->fetch_array())
 			array_push($result, new Team($row[0]));
 	}
 	return $result;
@@ -292,22 +308,24 @@ function list_teams($div = 0, $order = "name", $pl = 1) {
 // For when we want all teams playing or not
 
 function list_all_teams() {
-	$ret = mysql_query("select name from team order by playing desc,name");
+	global $Connection;
+	$ret = $Connection->query("SELECT name FROM team ORDER BY playing desc,name");
 	$result = array();
 	if ($ret) {
-		while ($row = mysql_fetch_array($ret))
+		while ($row = $ret->fetch_array())
 			array_push($result, new Team($row[0]));
 	}
 	return $result;
 }
 
 function max_division() {
-	$ret = mysql_query("select max(divnum) from team where playing=1");
-	if ($ret && mysql_num_rows($ret) > 0) {
-		$row = mysql_fetch_array($ret);
+	global $Connection;
+	$ret = $Connection->query("SELECT max(divnum) FROM team WHERE playing=1");
+	if ($ret && $ret->num_rows > 0) {
+		$row = $ret->fetch_array();
 		return $row[0];
 	}
-	return 1;	
+	return 1;
 }
 
 function score_compare($teama, $teamb) {

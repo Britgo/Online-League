@@ -1,10 +1,11 @@
 <?php
-//   Copyright 2016 John Collins
+//   Copyright 2016-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -42,7 +43,7 @@ class MatchBase {
 	public  $Result;		// N (not played) P (part played) D Draw H Home Win A Away win
 	public  $Games;		// Array of game objects
 	public  $Defaulted;	// Boolean if whole match defaulted
-	
+
 	public function __construct($in = 0, $d = 1) {
 		$this->Ind = $in;
 		$this->Division = $d;
@@ -54,10 +55,10 @@ class MatchBase {
 		$this->Games = array();
 		$this->Defaulted = false;
 	}
-	
+
 	// Just a few places where we need the ind but we don't want people fiddling
 	// so we make it private
-	
+
 	public function query_ind() {
 		return $this->Ind;
 	}
@@ -65,13 +66,13 @@ class MatchBase {
 	// Use for generating a database query component referring to the match
 	// $prefix is set to a non-empty string where the column name has some
 	// prefix to "ind" mostly for game where column is "matchind"
-	 
+
 	public function queryof($prefix="") {
 		return "{$prefix}ind={$this->Ind}";
 	}
-	
+
 	// Get the team details for a match
-	
+
 	public function fetchteams() {
 		try  {
 			$this->Hteam->fetchdets();
@@ -88,13 +89,13 @@ class MatchBase {
 		array_push($this->Games, $g);
 		return $g;
 	}
-	
+
 	public function ngames()  {
 		return count($this->Games);
 	}
-	
+
 	// Indicate if both teams are allocated
-	
+
 	public function is_allocated() {
 		if ($this->Defaulted)
 			return true;
@@ -105,9 +106,9 @@ class MatchBase {
 				return false;
 		return true;
 	}
-	
+
 	// Indicate if given team is allocated
-	
+
 	public function team_allocated($t) {
 		if  ($this->Defaulted)
 			return true;
@@ -118,23 +119,23 @@ class MatchBase {
 				return false;
 		return true;
 	}
-	
+
 	public function teamalloc()  {
 		if  ($this->Defaulted)
 			return true;
-		$ret = mysql_query("select count(*) from game where {$this->queryof('match')}");
-		if (!$ret || mysql_num_rows($ret) == 0)
+		$ret = $Connection->query("SELECT COUNT(*) FROM game WHERE {$this->queryof('match')}");
+		if (!$ret || $ret->num_rows == 0)
 			return false;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0] != 0;
 	}
-	
+
 	public function convhalf($sc) {
 		if ($sc == 0.5)
 			return '&frac12;';
 		return  preg_replace('/\.5/', '&frac12;', $sc);
 	}
-	
+
 	public function summ_score() {
 		$d = $this->Draws * 0.5;
 		return  $this->convhalf($this->Hwins+$d) . "-" . $this->convhalf($this->Awins+$d);

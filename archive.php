@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,6 +33,8 @@ include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/params.php';
 
+$Connection = opendatabase(true);
+
 $pars = new Params();
 $pars->fetchvalues();
 
@@ -32,26 +42,20 @@ $pars->fetchvalues();
 
 include 'php/promoreleg.php';
 
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Promotion and Relegation / Archive";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+lg_html_header("Promotion and Relegation / Archive");
+print <<<EOT
 <script language="javascript">
 function checkok() {
 	return confirm("Are you sure you want to do this - it is pretty well irreversible");
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Promotion and Relegation / Archive</h1>
-<?php
+
+EOT;
 if (count($messages) > 0)  {
 	print <<<EOT
 <p>
@@ -67,21 +71,21 @@ else  {
 	$earliest = new Matchdate();
 	$latest = new Matchdate();
 	$seasnum = 1;
-	$ret = mysql_query("select matchdate from lgmatch order by matchdate limit 1");
-	if ($ret && mysql_num_rows($ret) > 0)  {
-		$row = mysql_fetch_array($ret);
+	$ret = $Connection->query("SELECT matchdate FROM lgmatch ORDER BY matchdate limit 1");
+	if ($ret && $ret->num_rows > 0)  {
+		$row = $ret->fetch_array();
 		if ($row)
-			$earliest->enctime($row[0]);	
+			$earliest->enctime($row[0]);
 	}
-	$ret = mysql_query("select matchdate from lgmatch order by matchdate desc limit 1");
-	if ($ret && mysql_num_rows($ret) > 0)  {
-		$row = mysql_fetch_array($ret);
+	$ret = $Connection->query("SELECT matchdate FROM lgmatch ORDER BY matchdate desc limit 1");
+	if ($ret && $ret->num_rows > 0)  {
+		$row = $ret->fetch_array();
 		if ($row)
-			$latest->enctime($row[0]);	
+			$latest->enctime($row[0]);
 	}
-	$ret = mysql_query("select count(*) from season where league='T'");
-	if ($ret && mysql_num_rows($ret) > 0) {
-		$row = mysql_fetch_array($ret);
+	$ret = $Connection->query("SELECT COUNT(*) FROM season WHERE league='T'");
+	if ($ret && $ret->num_rows > 0) {
+		$row = $ret->fetch_array();
 		if ($row)
 			$seasnum = $row[0]+1;
 	}
@@ -123,10 +127,8 @@ do this with care!
 Please <input type="submit" name="submit" value="Click Here"> when ready.
 </p>
 </form>
+
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

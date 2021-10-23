@@ -1,6 +1,12 @@
 <?php
 
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -30,7 +36,7 @@ class Game {
 	public  $Sgf;			// Sgf file
 	public  $Matchind;	// Ind in match table
 	public  $League;		// Which league T=team I=individual P=pair
-	
+
 	public function __construct($in = 0, $min = 0, $d = 1, $l = 'T') {
 		$this->Ind = $in;
 		$this->Division = $d;
@@ -56,7 +62,7 @@ class Game {
 			$this->Wteam = $this->Bteam = Null;
 		}
 	}
-	
+
 	public function query_ind() {
 		return $this->Ind;
 	}
@@ -64,34 +70,34 @@ class Game {
 	public function fromget() {
 		$this->Ind = intval($_GET["gn"]);
 	}
-	
+
 	public function frompost($prefix = "") {
 		$this->Ind = $_POST["${prefix}gn"];
 		if ($this->Ind == 0)
-			throw new GameException("Null post ind field"); 
+			throw new GameException("Null post ind field");
 	}
-	
+
 	public function urlof() {
 		return "gn={$this->Ind}";
 	}
-	
+
 	public function queryof($prefix="") {
 		return "{$prefix}ind={$this->Ind}";
 	}
-	
+
 	public function save_hidden($prefix = "") {
 		$f = $this->Ind;
 		return "<input type=\"hidden\" name=\"${prefix}gn\" value=\"$f\">";
 	}
-	
+
 	public function fetchdets() {
 		$q = $this->queryof();
-		$ret = mysql_query("select divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league from game where $q");
+		$ret = $Connection->query("SELECT divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league FROM game WHERE $q");
 		if (!$ret)
 			throw new GameException("Cannot read database for game $q");
-		if (mysql_num_rows($ret) == 0)
+		if ($ret->num_rows == 0)
 			throw new GameException("Cannot find game record {$this->Ind}");
-		$row = mysql_fetch_assoc($ret);
+		$row = $ret->fetch_assoc();
 		$this->Division = $row["divnum"];
 		$this->Date->fromtabrow($row);
 		$this->League = $row["league"];
@@ -103,7 +109,7 @@ class Game {
 		try  {
 			switch ($this->League)  {
 			case 'T':
-				$wt = $row['wteam'];		
+				$wt = $row['wteam'];
 				if (strlen($wt) != 0)  {
 					$this->Wteam = new Team($wt);
 					$this->Wplayer = new Player($row["wfirst"], $row["wlast"]);
@@ -131,19 +137,19 @@ class Game {
 		catch (PlayerException $e) {
 			throw new GameException($e->getMessage());
 		}
-		
+
 		$this->Result = $row["result"];
-		$this->Resultdet = $row["reshow"];	
+		$this->Resultdet = $row["reshow"];
 	}
-	
+
 	public function fetchhistdets($seas) {
 		$q = $this->queryof();
-		$ret = mysql_query("select divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league from game where $q");
+		$ret = $Connection->query("SELECT divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league FROM game WHERE $q");
 		if (!$ret)
 			throw new GameException("Cannot read database for game $q");
-		if (mysql_num_rows($ret) == 0)
+		if ($ret->num_rows == 0)
 			throw new GameException("Cannot find game record {$this->Ind}");
-		$row = mysql_fetch_assoc($ret);
+		$row = $ret->fetch_assoc();
 		$this->Division = $row["divnum"];
 		$this->Date->fromtabrow($row);
 		$this->League = $row["league"];
@@ -167,21 +173,21 @@ class Game {
 		$this->Resultdet = $row["reshow"];
 		$this->Matchind = $row["matchind"];
 	}
-	
+
 	public function game_name() {
 		return "bga_gm{$this->Ind}.sgf";
 	}
-	
+
 	public function create_game() {
-	
+
 		// Set these to some numeric value in case not defined
 		// Only invoked for team league.
 
 		$qwrank = 0;
 		$qbrank = 0;
-		
+
 		//  Teams are not defined if only partly allocated
-		
+
 		if ($this->Wteam) {
 			$qwteam = $this->Wteam->queryname();
 			$qwfirst = $this->Wplayer->queryfirst();
@@ -194,26 +200,26 @@ class Game {
 			$qblast = $this->Bplayer->querylast();
 			$qbrank = $this->Bplayer->Rank->Rankvalue;
 		}
-		
+
 		$qdate = $this->Date->queryof();
-		
+
 		// These are always going to be 'N' and null but let's be consistent.
 		// (Except for individual league where we get them right first time)
-		
-		$qres = mysql_real_escape_string($this->Result);
-		$qresdat = mysql_real_escape_string($this->Resultdet);
-		$qsgf = mysql_real_escape_string($this->Sgf);
+
+		$qres = $Connection->real_escape_string($this->Result);
+		$qresdat = $Connection->real_escape_string($this->Resultdet);
+		$qsgf = $Connection->real_escape_string($this->Sgf);
 		$qmi = $this->Matchind;
-		
-		if (!mysql_query("insert into game (matchdate,wfirst,wlast,wteam,wrank,bfirst,blast,bteam,brank,result,reshow,sgf,matchind,divnum,league) values ('$qdate','$qwfirst','$qwlast','$qwteam',$qwrank,'$qbfirst','$qblast','$qbteam',$qbrank,'$qres','$qresdat','$qsgf',{$this->Matchind},{$this->Division},'{$this->League}')"))
-			throw new GameException(mysql_error());
-		$ret = mysql_query("select last_insert_id()");
-		if (!$ret || mysql_num_rows($ret) == 0)
+
+		if (!$Connection->query("INSERT INTO game (matchdate,wfirst,wlast,wteam,wrank,bfirst,blast,bteam,brank,result,reshow,sgf,matchind,divnum,league) VALUES ('$qdate','$qwfirst','$qwlast','$qwteam',$qwrank,'$qbfirst','$qblast','$qbteam',$qbrank,'$qres','$qresdat','$qsgf',{$this->Matchind},{$this->Division},'{$this->League}')"))
+			throw new GameException($Connection->error);
+		$ret = $Connection->query("SELECT last_insert_id()");
+		if (!$ret || $ret->num_rows == 0)
 			throw new GameException("Cannot locate game record id");
-		$row = mysql_fetch_array($ret);
-		$this->Ind = $row[0];					
+		$row = $ret->fetch_array();
+		$this->Ind = $row[0];
 	}
-	
+
 	public function update_players()  {
 
 		// Set these to some numeric value in case not defined
@@ -222,7 +228,7 @@ class Game {
 		$qbrank = 0;
 
 		//  Teams are not defined if only partly allocated
-		
+
 		if ($this->Wteam) {
 			$qwteam = $this->Wteam->queryname();
 			$qwfirst = $this->Wplayer->queryfirst();
@@ -235,38 +241,38 @@ class Game {
 			$qblast = $this->Bplayer->querylast();
 			$qbrank = $this->Bplayer->Rank->Rankvalue;
 		}
-		
-		if (!mysql_query("update game set wfirst='$qwfirst',wlast='$qwlast',bfirst='$qbfirst',blast='$qblast',wteam='$qwteam',bteam='$qbteam',wrank=$qwrank,brank=$qbrank where {$this->queryof()}"))
-			throw new GameException(mysql_error()); 
+
+		if (!$Connection->query("UPDATE game SET wfirst='$qwfirst',wlast='$qwlast',bfirst='$qbfirst',blast='$qblast',wteam='$qwteam',bteam='$qbteam',wrank=$qwrank,brank=$qbrank WHERE {$this->queryof()}"))
+			throw new GameException($Connection->error);
 	}
-	
+
 	// Indicate if both teams are allocated
-	
+
 	public function is_allocated() {
 		return $this->Wteam && $this->Bteam;
 	}
 
 	// Indicate if specified team is allocated
-		
+
 	public function team_allocated($t) {
 		return ($this->Wteam && $this->Wteam->is_same($t)) ||
 				 ($this->Bteam && $this->Bteam->is_same($t));
 	}
-	
+
 	private function has_sgf() {
-		$ret = mysql_query("select length(sgf) from game where {$this->queryof()}");
+		$ret = $Connection->query("SELECT length(sgf) FROM game WHERE {$this->queryof()}");
 		if (!$ret)
 			return false;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		return $row[0] != 0;
 	}
-	
+
 	public function date_played() {
 		if ($this->Result == 'N')
 			return "";
 		return $this->Date->disp_abbrev();
 	}
-	
+
 	public function playerin($u)  {
 		try {
 			$pp = new Player($u);
@@ -293,8 +299,8 @@ class Game {
 		$qbfirst = $this->Bplayer->queryfirst();
 		$qblast = $this->Bplayer->querylast();
 		$qbrank = $this->Bplayer->Rank->Rankvalue;
-		if (!mysql_query("update game set wfirst='$qwfirst',wlast='$qwlast',bfirst='$qbfirst',blast='$qblast',wteam='$qwteam',bteam='$qbteam',wrank=$qwrank,brank=$qbrank where {$this->queryof()}"))
-			throw new GameException(mysql_error()); 
+		if (!$Connection->query("UPDATE game SET wfirst='$qwfirst',wlast='$qwlast',bfirst='$qbfirst',blast='$qblast',wteam='$qwteam',bteam='$qbteam',wrank=$qwrank,brank=$qbrank WHERE {$this->queryof()}"))
+			throw new GameException($Connection->error);
 	}
 
 	public function display_result($addunpl = false) {
@@ -320,12 +326,12 @@ class Game {
 			$res = "<a href=\"downloadsgf.php?{$this->urlof()}\">$res</a>";
 		return $res;
 	}
-	
+
 	public function reset_date($dat) {
 		$this->Date = $dat;
-		mysql_query("update game set matchdate='{$dat->queryof()}' where {$this->queryof()}"); 
+		$Connection->query("UPDATE game SET matchdate='{$dat->queryof()}' WHERE {$this->queryof()}");
 	}
-	
+
 	public function adj_match($mtch, $mult) {
 		switch ($this->Result) {
 		default:
@@ -333,7 +339,7 @@ class Game {
 		case 'J':
 			$mtch->Draws += $mult;
 			break;
-		case 'W':	
+		case 'W':
 			if ($this->Wteam->is_same($mtch->Hteam))
 				$mtch->Hwins += $mult;
 			else
@@ -348,9 +354,9 @@ class Game {
 		}
 		// If we have a result, delete any messages specific to that game
 		if  ($mult > 0)
-			mysql_query("delete from message where {$this->queryof('game')}");
+			$Connection->query("DELETE FROM message WHERE {$this->queryof('game')}");
 	}
-	
+
 	//  Setup Resultdet as W+whatever or B+whatever or Jigo
 
 	public function setup_restype($res, $restype) {
@@ -363,31 +369,31 @@ class Game {
 		$this->Resultdet = $restype;
 		$this->Result = $res;
 	}
-	
+
 	//  This is for recording a result and adjusting the match details
 	//  Only valid for team league.
-	
+
 	public function set_result($res, $restype) {
 		$mtch = new Match($this->Matchind);
 		$mtch->fetchdets();
 		// Undo whatever we had before (to cope with corrections
 		$this->adj_match($mtch, -1);
-		// Now set the new values
+		// Now SET the new values
 		$this->setup_restype($res, $restype);
 		// Update match accordingly
 		$this->adj_match($mtch, 1);
 		$mtch->updscore();
-		$qres = mysql_real_escape_string($res);
-		$qrest = mysql_real_escape_string($this->Resultdet);
-		mysql_query("update game set result='$qres',reshow='$qrest' where {$this->queryof()}");
-		return $mtch;	// For benefit of news		
+		$qres = $Connection->real_escape_string($res);
+		$qrest = $Connection->real_escape_string($this->Resultdet);
+		$Connection->query("UPDATE game SET result='$qres',reshow='$qrest' WHERE {$this->queryof()}");
+		return $mtch;	// For benefit of news
 	}
-	
+
 	// Delete wrongly entered result
-	
+
 	public function delete_result() {
 		if ($this->League == 'I')  {
-			mysql_query("delete from game where {$this->queryof()}");
+			$Connection->query("DELETE FROM game WHERE {$this->queryof()}");
 		}
 		else  {
 			$mtch = new Match($this->Matchind);
@@ -396,35 +402,35 @@ class Game {
 			$this->Result = 'N';
 			$this->Resultdet = '';
 			$mtch->updscore();
-			mysql_query("update game set result='N',reshow='',sgf='' where {$this->queryof()}");
+			$Connection->query("UPDATE game SET result='N',reshow='',sgf='' WHERE {$this->queryof()}");
 		}
 	}
-	
+
 	public function get_sgf() {
-		$ret = mysql_query("select sgf from game where {$this->queryof()}");
-		if (!$ret  ||  mysql_num_rows($ret) == 0)
+		$ret = $Connection->query("SELECT sgf FROM game WHERE {$this->queryof()}");
+		if (!$ret  ||  $ret->num_rows == 0)
 			return;
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		$this->Sgf = $row[0];
 	}
-	
+
 	public function set_sgf($sgfdata) {
-		$qsgfdata = mysql_real_escape_string($sgfdata);
-		mysql_query("update game set sgf='$qsgfdata' where {$this->queryof()}");
+		$qsgfdata = $Connection->real_escape_string($sgfdata);
+		$Connection->query("UPDATE game SET sgf='$qsgfdata' WHERE {$this->queryof()}");
 		$this->Sgf = $sgfdata;
 	}
-	
+
 	public function set_current($v = false, $si = 0) {
 		$vi = $v? 1: 0;
-		mysql_query("update game set current=$vi,seasind=$si where {$this->queryof()}");
+		$Connection->query("UPDATE game SET current=$vi,seasind=$si WHERE {$this->queryof()}");
 	}
 }
 
 function list_nosgf_games() {
 	$result = array();
-	$ret = mysql_query("select ind from game where result!='N' and length(sgf)=0 and current=1 order by matchdate,wrank desc,brank desc");
+	$ret = $Connection->query("SELECT ind FROM game WHERE result!='N' and length(sgf)=0 and current=1 ORDER BY matchdate,wrank desc,brank desc");
 	if ($ret) {
-		while ($row = mysql_fetch_array($ret)) {
+		while ($row = $ret->fetch_array()) {
 			$r = new game($row[0]);
 			$r->fetchdets();
 			array_push($result, $r);
@@ -436,9 +442,9 @@ function list_nosgf_games() {
 function list_played_games() {
 	$result = array();
 	// Fix this to only do current season games (only used in fixres.php)
-	$ret = mysql_query("select ind from game where result!='N' and seasind=0 order by matchdate,wlast,wfirst,blast,bfirst");
+	$ret = $Connection->query("SELECT ind FROM game WHERE result!='N' and seasind=0 ORDER BY matchdate,wlast,wfirst,blast,bfirst");
 	if ($ret) {
-		while ($row = mysql_fetch_array($ret)) {
+		while ($row = $ret->fetch_array()) {
 			$r = new game($row[0]);
 			$r->fetchdets();
 			array_push($result, $r);

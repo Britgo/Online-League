@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2013 John Collins
+//   Copyright 2013-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,6 +32,7 @@ include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/game.php';
 
+$Connection = opendatabase(true);
 function listmessages($userid, $sent)
 {
 	if ($sent)  {
@@ -42,9 +50,9 @@ function listmessages($userid, $sent)
 		$th = "From";
 	}
 	print "<h1>$msgt messages</h1>";
-	$Sun = mysql_real_escape_string($userid);
-	$ret = mysql_query("select $searchid,created,matchind,gameind,subject,hasread,ind from message where $fetchid='$Sun' order by created,subject");
-	if (!$ret || mysql_num_rows($ret) == 0)  {
+	$Sun = $Connection->real_escape_string($userid);
+	$ret = $Connection->query("SELECT $searchid,created,matchind,gameind,subject,hasread,ind FROM message WHERE $fetchid='$Sun' ORDER BY created,subject");
+	if (!$ret || $ret->num_rows == 0)  {
 		print "<p>No messages found.</p>\n";
 	}
 	else  {
@@ -58,7 +66,7 @@ function listmessages($userid, $sent)
 	<th>Game</th>
 	<th>Subject</th>
 EOT;
-		while ($row = mysql_fetch_assoc($ret))  {
+		while ($row = $ret->fetch_assoc())  {
 			$fu = $row[$searchid];
 			$cr = $row["created"];
 			$mid = $row["matchind"];
@@ -72,7 +80,7 @@ EOT;
 			$pre = $post = "";
 			if (!$hasr)  {
 				$pre = "<strong>";
-				$post = "</strong>";			
+				$post = "</strong>";
 			}
 			if  (preg_match("/(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)/", $cr, $matches))  {
 				$dat = $matches[3] . '/' . $matches[2] . '/' . $matches[1];
@@ -101,23 +109,19 @@ EOT;
 
 try {
         $player = new Player();
-        $player->fromid($userid);
+        $player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-        $mess = $e->getMessage();
-        include 'php/wrongentry.php';
-        exit(0);
+   wrongentry($e->getMessage());
 }
 
 // Get the teams this player is captain of
-	
-try {	
+
+try {
 	$captain_of = list_teams_captof($player);
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 // Get matches we might want to send messages about.
@@ -128,9 +132,9 @@ if  (count($captain_of) != 0)  {
 	// Do each team in turn it's easier to code
 
 	foreach ($captain_of as $team) {
-		$ret = mysql_query("select ind from lgmatch where (result='N' or result='P') and ({$team->queryof('hteam')} or {$team->queryof('ateam')}) order by matchdate");
-		if ($ret && mysql_num_rows($ret) > 0)  {
-			while ($row = mysql_fetch_array($ret))  {
+		$ret = $Connection->query("SELECT ind FROM lgmatch WHERE (result='N' OR result='P') AND ({$team->queryof('hteam')} OR {$team->queryof('ateam')}) ORDER BY matchdate");
+		if ($ret && $ret->num_rows > 0)  {
+			while ($row = $ret->fetch_array())  {
 				try {
 					$mtch = new Match($row[0]);
 					$mtch->fetchdets();
@@ -143,24 +147,18 @@ if  (count($captain_of) != 0)  {
 				}
 			}
 		}
-	}	 
+	}
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Qun = htmlspecialchars($username);
-$Sun = mysql_real_escape_string($userid);
-$Title = "Messages for $Qun";
-include 'php/head.php';
-?>
-<body>
-<?php include 'php/nav.php';
+
+$Qun = htmlspecialchars($Connection->username);
+$Sun = $Connection->real_escape_string($Connection->userid);
+lg_html_header("Messages for $Qun");
+lg_html_nav();
 
 // List received messages and sent messages.
 
-listmessages($userid, false);
-listmessages($userid, true);
+listmessages($Connection->userid, false);
+listmessages($Connection->userid, true);
 
 // List O/S matches for team captain if this player is such
 
@@ -199,9 +197,9 @@ print "<h1>Outstanding games</h1>\n";
 // Now for user's games
 
 $osgames = array();
-$ret = mysql_query("select ind from game where result='N' and (({$player->queryof('w')}) or ({$player->queryof('b')})) order by matchdate");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_array($ret))  {
+$ret = $Connection->query("SELECT ind FROM game WHERE result='N' AND (({$player->queryof('w')}) OR ({$player->queryof('b')})) ORDER BY matchdate");
+if ($ret && $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_array())  {
 		try {
 			$g = new Game($row[0]);
 			$g->fetchdets();
@@ -257,12 +255,11 @@ print <<<EOT
 
 EOT;
 }
-?>
+print <<<EOT
 <h1>General message</h1>
 <p>If you want to send someone a new message about any subject,
 <a href="composegmsg.php">Click Here</a>.</p>
 
-</div>
-</div>
-</body>
-</html>
+EOT;
+lg_html_footer();
+?>

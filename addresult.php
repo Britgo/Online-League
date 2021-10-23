@@ -1,10 +1,11 @@
 <?php
-//   Copyright 2009-2015 John Collins
+//   Copyright 2009-2021 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 
 //   This program is free software: you can redistribute it and/or modify
@@ -20,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -31,25 +33,20 @@ include 'php/teammemb.php';
 include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/game.php';
+
+$Connection = opendatabase(true);
+
 $g = new Game();
 try  {
 	$g->fromget();
 	$g->fetchdets();
 }
 catch (GameException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Add Game Result";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+
+lg_html_header("Add ga,e result");
+print <<<EOT
 <script language="javascript">
 function checkreverse(gm) {
 	if (!confirm("Are you sure the colours were reversed?"))
@@ -86,13 +83,9 @@ function loadkgs() {
 							  res + "&rt=" + restype;
 	return false;
 }
-<?php
-print <<<EOT
 var white="{$g->Wplayer->KGS}";
 var black="{$g->Bplayer->KGS}";
 
-EOT;
-?>
 function checknokgs() {
 	var fm = document.resform;
    if (fm.sgffile.value.length != 0)
@@ -102,12 +95,13 @@ function checknokgs() {
 	return confirm("Are you sure that this match was not played on KGS between " + white + " and " + black);
 }
 </script>
-<?php include 'php/nav.php'; ?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Add Game Result</h1>
 <p>
 Adding result for Game between
-<?php
-print <<<EOT
 <b>{$g->Wplayer->display_name(false)}</b>
 ({$g->Wplayer->display_rank()}) of
 {$g->Wteam->display_name()} as White and
@@ -118,6 +112,7 @@ print <<<EOT
 <form name="resform" action="addresult2.php" method="post" enctype="multipart/form-data">
 {$g->save_hidden()}
 <p>
+
 EOT;
 $today = new Matchdate();
 $today->dateopt("Game was played on");
@@ -137,14 +132,16 @@ by
 <option value="N">Not known</option>
 <option value="R">Resign</option>
 <option value="T">Time</option>
+
 EOT;
 for ($v = 0; $v < 50; $v++)
 	print "<option value=$v>$v.5</option>\n";
-?>
+print <<<EOT
 <option value="H">Over 50</option>
 </select>
 </p>
-<?php
+
+EOT;
 if (strlen($g->Wplayer->KGS) != 0 && strlen($g->Bplayer->KGS) != 0) {
 	print <<<EOT
 <h2>Loading game file from KGS</h2>
@@ -162,18 +159,16 @@ Then click here to download the SGF from the KGS records.
 
 EOT;
 }
-?>
-<p>
-If you have the game available on your computer as an SGF file to
-upload browse for it here <input type=file name=sgffile>
-</p>
+print <<<EOT
+<p>If you have the game available on your computer as an SGF file to
+upload browse for it here <input type=file name=sgffile></p>
 <p>If you don't have the file available as an SGF anywhere just leave the above blank.</p>
 <p>In either case click here <input type="submit" value="Add result" onclick="javascript:return checknokgs();">
 </p>
 </form>
 <p>If you never meant to get to this page
 <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

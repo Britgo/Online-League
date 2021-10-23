@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -23,30 +29,30 @@ function kgsfetchsgf($g) {
 
 	$wkgs = $g->Wplayer->KGS;
 	$bkgs = $g->Bplayer->KGS;
-	
+
 	if  (strlen($wkgs) == 0)
 		throw new GameException("No KGS name for white player");
 	if  (strlen($bkgs) == 0)
 		throw new GameException("No KGS name for black player");
-	
+
 	$dat = $g->Date->queryof();
 	$res = $g->Resultdet;
-	
+
 	//  OK do the biz
-	
+
 	$prog = $_SERVER["DOCUMENT_ROOT"] . '/league/kgsfetchsgf.pl';
 	$fh = popen("$prog $wkgs $bkgs $dat $res", "r");
 	if (!$fh)
 		throw new GameException("Unable to run kgsfetch");
-		
+
 	//  Actually read the thing
-	
+
 	$sgfdata = "";
 	while ($part = fread($fh, 200))
 		$sgfdata .= $part;
-		
+
 	//  Get code and diagnose problems
-	
+
 	$code = pclose($fh);
 	if ($code != 0)  {
 		switch ($code) {
@@ -62,10 +68,10 @@ function kgsfetchsgf($g) {
 			throw new GameException("Unable to fetch game SGF");
 		}
 	}
-	
+
 	if  (strlen($sgfdata) == 0)
 		throw new GameException("KGS read gave zero length SGF");
-	
+
 	return $sgfdata;
-} 
+}
 ?>

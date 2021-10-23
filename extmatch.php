@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,33 +20,33 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/matchdate.php';
 include 'php/rank.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "External Matches";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("External Matches");
+lg_html_nav();
+
+print <<<EOT
 <h1>External Matches</h1>
-<?php
+
+EOT;
+
 class Extmatch {
 	public $Name;
 	public $Description;
 	public $Date;
-	
+
 	public function __construct() {
 		$this->Name = "";
 		$this->Description = "";
 		$this->Date = new Matchdate();
 	}
-	
+
 	public function fromrow($row) {
 		$this->Name = $row["name"];
 		$this->Description = $row["description"];
@@ -54,7 +60,7 @@ class Extteam {
 	public $Last;
 	public $KGSname;
 	public $Rank;
-	
+
 	public function __construct($mn) {
 		$this->Mname = $mn;
 		$this->First = "";
@@ -62,7 +68,7 @@ class Extteam {
 		$this->KGSname = "";
 		$this->Rank = new Rank();
 	}
-	
+
 	public function fromrow($row) {
 		$this->First = $row['first'];
 		$this->Last = $row['last'];
@@ -71,11 +77,11 @@ class Extteam {
 	}
 }
 
-$ret = mysql_query('select name,description,matchdate from extmatch order by matchdate,name');
+$ret = $Connection->query('SELECT name,description,matchdate FROM extmatch ORDER BY matchdate,name');
 $matches = array();
 
 if ($ret)  {
-	while  ($row = mysql_fetch_assoc($ret))  {
+	while  ($row = $ret->fetch_assoc())  {
 		$m = new Extmatch();
 		$m->fromrow($row);
 		array_push($matches, $m);
@@ -100,13 +106,13 @@ else  {
 <tr><th>Player</th><th>KGS name</th><th>Rank</th></tr>
 
 EOT;
-		$ret = mysql_query("select first,last,kgs,rank from extteam,player where mname='$mname' and player.first=extteam.efirst and player.last=extteam.elast order by rank desc,first,last");
+		$ret = $Connection->query("SELECT first,last,kgs,rank FROM extteam,player WHERE mname='$mname' AND player.first=extteam.efirst AND player.last=extteam.elast ORDER BY rank desc,first,last");
 		$players = array();
 		if ($ret)  {
-			while ($row = mysql_fetch_assoc($ret))  {
+			while ($row = $ret->fetch_assoc())  {
 				$p = new Extteam($mname);
 				$p->fromrow($row);
-				array_push($players, $p);			
+				array_push($players, $p);
 			}
 		}
 		foreach ($players as $p)  {
@@ -127,8 +133,5 @@ EOT;
 EOT;
 	}
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

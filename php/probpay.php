@@ -8,7 +8,13 @@
 <h1>Payment error.</h1>
 <?php
 
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by

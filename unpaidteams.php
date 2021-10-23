@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,37 +20,29 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
-if (!$admin) {
-	$mess = "You have to be logged in as an admin to see this page";
-	include 'php/wrongentry.php';
-	exit(0);
-}
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<?php
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
-?>
-<html>
-<?php
-$Title = "Unpaid Teams";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+$Connection = opendatabase(true);
+if (!$Connection->$admin)
+   wrongentry("You have to be logged in as an admin to see this page");
+
+lg_html_header("Unpaid Teams");
+lg_html_nav();
+
+print <<<EOT
 <h1>Teams which have not paid</h1>
-<?php
-$ret = mysql_query("select name from team where paid=0 and playing!=0 order by divnum,name");
-if (!$ret || mysql_num_rows($ret) == 0)  {
+
+EOT;
+
+$ret = $Connection->query("SELECT name FROM team WHERE paid=0 AND playing!=0 ORDER BY divnum,name");
+if (!$ret || $ret->num_rows == 0)  {
 	print <<<EOT
 <p>There does not seem to be any team which has not paid.</p>
 <p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
@@ -64,7 +62,7 @@ else  {
 
 EOT;
 	$num = 0;
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$team = new Team($row[0]);
 		$team->fetchdets();
 		print <<<EOT
@@ -87,12 +85,11 @@ EOT;
 
 EOT;
 }
-?>
+print <<<EOT
 <h2>Set all teams as unpaid</h2>
 <p>At the start of the season, you will want to set all teams as not having paid.
-If you want to do this now, <a href="setunpaid.php">click here</a>.
-</p>
-</div>
-</div>
-</body>
-</html>
+If you want to do this now, <a href="setunpaid.php">click here</a>.</p>
+
+EOT;
+lg_html_footer();
+?>

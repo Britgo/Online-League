@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,37 +32,25 @@ include 'php/params.php';
 include 'php/itrecord.php';
 include 'php/season.php';
 
+$Connection = opendatabase();
+
 try {
 	$Season = new Season();
 	$Season->fromget();
 	$Season->fetchdets();
 }
 catch (SeasonException $e) {
-	$mess = $e->getMessage();
-	include 'php/dataerror.php';
-	exit(0);
-}
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Historical Individual League Results";
-include 'php/head.php';
-?>
-<body class="il">
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+   database_error($e->getMessage());
+0}
+
+lg_html_header("Historical Individual League Results", "il");
+lg_html_nav();
+print <<<EPT
 <h1>Historical Individual League Standings</h1>
-<?php
-print <<<EOT
 <p>This is the final league table for <strong>{$Season->display_name()}</strong>,
 which ran from {$Season->display_start()} to {$Season->display_end()}.</p>
 <p>Only players who played games are included.</p>
-
-EOT;
-?>
 <div align="center">
-<?php
 $pars = new Params();
 $pars->fetchvalues();
 $ml = max_ildivision();
@@ -84,9 +80,9 @@ EOT;
 			$p->get_scores($pars, $Season->Ind);
 		}
 		usort($players, 'ilscore_compare');
-	
+
 		// Insert column header
-	
+
 		foreach ($players as $p)  {
 			print "<th>{$p->display_initials()}</th>\n";
 		}
@@ -138,14 +134,13 @@ EOT;
 	if ($d != $ml)
 		print "<br><br><br>\n";
 }
-?>
+print <<<EOT
 </div>
 <p>Key to above: Matches <b>P</b>layed, <b>W</b>on, <b>D</b>rawn, <b>L</b>ost.
-<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.
-</p>
+<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.</p>
 <h2>Other Seasons</h2>
 <p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

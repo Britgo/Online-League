@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,25 +32,21 @@ include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/news.php';
 
+$Connection = opendatabase(true);
 $div = $_POST["div"];
-if (strlen($div) == 0) {
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if (strlen($div) == 0)
+	wrongentry("Expecting to be invoked via form");
+
 $dat = new Matchdate();
 $dat->frompost();
 $mintnum = $_POST["mintnum"];
 $mint = $_POST["mint"];
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Initialise Matches";
-include 'php/head.php';
-?>
-<body>
+lg_html_header("Initialise matches");
+lg_html_nav();
+print <<<EOT
 <h1>Initialise Matches</h1>
-<?php
+
+EOT;
 
 class MatchData {
 	public $hteam;				//  Home team number
@@ -245,8 +248,9 @@ else  {
 }
 $nws = new News('ADMINS', "Draw made for new season division $div", true, "matches.php");
 $nws->addnews();
-
-?>
+print <<<EOT
 <p>Click <a href="javascript:self.close()">here</a> to close this window.</p>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

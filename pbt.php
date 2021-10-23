@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,29 +20,24 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Players List by team";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Players by team</h1>
-<?php
+
+$Connection = opendatabase();
+lg_html_header("Players List by team");
+lg_html_nav();
 $cs = 13;
+
 print <<<EOT
+<h1>Players by team</h1>
 <table class="pllist">
-<tr>
 <tr>
 <th colspan="3">&nbsp;</th>
 <th colspan="4" align="center">Current</th>
@@ -68,6 +69,7 @@ foreach ($tlist as $team) {
 <a href="teamdisp.php?{$team->urlof()}" class="nound">{$team->display_name()}</a>
 </th>
 </tr>
+
 EOT;
 	$pl = $team->list_members();
 	foreach ($pl as $m) {
@@ -95,11 +97,12 @@ EOT;
 }
 print <<<EOT
 <tr><th colspan=$cs align="center">Not in a team</th></tr>
+
 EOT;
 
-$ret = mysql_query("select first,last from player order by last,first,rank desc");
+$ret = $Connection->query("SELECT first,last FROM player ORDER BY last,first,rank desc");
 if ($ret) {
-	while ($row = mysql_fetch_assoc($ret)) {
+	while ($row = $ret->fetch_assoc()) {
 		$p = new Player($row["first"], $row["last"]);
 		if ($p->count_teams() != 0)
 			continue;
@@ -125,10 +128,10 @@ if ($ret) {
 EOT;
 	}
 }
-?>
+print <<<EOT
 </table>
 <p>Click on player name to get game record for player.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

@@ -1,19 +1,34 @@
-<html>
-<head>
-<title>Jump to</title>
-<script language="JavaScript">
-function jumpto(loc) {
-	document.location = loc;
-}
-</script>
-</head>
 <?php
-print <<<EOT
-<body onload="javascript:jumpto('$loc');">
-<p>Please <a href="$loc">click here</a> if you are not taken to the right page.
-</p>
+//   Copyright 2011-2021 John Collins
 
-EOT;
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
+//   This program is free software: you can redistribute it and/or modify
+//   it under the terms of the GNU General Public License as published by
+//   the Free Software Foundation, either version 3 of the License, or
+//   (at your option) any later version.
+
+//   This program is distributed in the hope that it will be useful,
+//   but WITHOUT ANY WARRANTY; without even the implied warranty of
+//   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//   GNU General Public License for more details.
+
+//   You should have received a copy of the GNU General Public License
+//   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+function jumpto($loc) {
+	if  (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')
+		$url = "https://";
+   else
+		$url = "http://";
+	$url .=  $_SERVER['HTTP_HOST'];
+	$url .= "/";
+	$url .= $loc;
+   header("Location: $url");
+   exit(0);
+}
 ?>
-</body>
-</html>

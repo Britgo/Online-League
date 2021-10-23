@@ -1,4 +1,7 @@
 <?php
+
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -11,6 +14,8 @@ include 'php/game.php';
 include 'php/params.php';
 include 'php/hcp_message.php';
 
+$Connection = opendatabase(false, false);
+
 // Remember about player we can't email to bleat at team captain about instead
 
 class aboutplayer {
@@ -19,7 +24,7 @@ class aboutplayer {
 	public $match;			// Match info
 	public $game;			// Game info
 	public $reason;		// Reason not emailed
-	
+
 	public function __construct($p, $o, $m, $g, $r) {
 		$this->player = $p;
 		$this->opp = $o;
@@ -37,18 +42,18 @@ class tcrems {
 	public $Unalloc;		// Unallocated matches
 	public $Oppunalloc;	// Opponents unallocated
 	public $Noemail;		// No emails to players
-	
+
 	public function __construct($c) {
 		$this->Capt = $c;
 		$this->Unalloc = array();
 		$this->Oppunalloc = array();
 		$this->Noemail = array();
 	}
-	
+
 	public function adduamatch($m) {
 		array_push($this->Unalloc, $m);
 	}
-	
+
 	public function addoppuamatch($m) {
 		array_push($this->Oppunalloc, $m);
 	}
@@ -56,7 +61,7 @@ class tcrems {
 	public function addgame($p) {
 		array_push($this->Noemail, $p);
 	}
-		
+
 	public function othercapt($m) {
 		if ($this->Capt->is_same($m->Hteam->Captain))
 			return $m->Ateam->Captain;
@@ -102,7 +107,7 @@ You are playing as $col.
 
 EOT;
 	fwrite($fh, $mess);
-	
+
 	$onl = $opp->display_online();
 	if ($onl == '-')
 		$mess = <<<EOT
@@ -117,7 +122,7 @@ The online name for $oppname is $onl.
 
 EOT;
 	fwrite($fh, $mess);
-	
+
 	$hcp = hcp_message($g, $pars);
 	if ($hcp)
 		fwrite($fh, "\nPlease note this game is played with $hcp\n");
@@ -175,9 +180,9 @@ $pars->fetchvalues();
 
 $Captains = array();
 
-$ret = mysql_query("select ind from lgmatch where result!='H' and result!='A' and matchdate < date_add(current_date(),interval 30 day) order by divnum,matchdate,result");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_array($ret))  {
+$ret = $Connection->query("SELECT ind FROM lgmatch WHERE result!='H' AND result!='A' AND matchdate < DATE_ADD(CURRENT_DATE(),INTERVAL 30 DAY) ORDER BY divnum,matchdate,result");
+if ($ret && $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_array())  {
 		$ind = $row[0];
 		$mtch = new Match($ind);
 		$mtch->fetchdets();
@@ -192,9 +197,9 @@ if ($ret && mysql_num_rows($ret) > 0)  {
 		$at = $mtch->Ateam;
 		$hc = $ht->Captain;
 		$ac = $at->Captain;
-		
+
 		if ($mtch->is_allocated())  {
-			
+
 			// Match is allocated, find each unplayed game
 
 			foreach ($mtch->Games as $g)  {
@@ -301,7 +306,7 @@ EOT;
 			$m = $noem->match;
 			$pl = $noem->player;
 			$opp = $noem->opp;
-				
+
 			$mess = <<<EOT
 Date: {$m->Date->display_month()}
 Match: {$m->Hteam->display_name()} -v- {$m->Ateam->display_name()}
@@ -313,7 +318,7 @@ EOT;
 			fwrite($fh, $mess);
 		}
 	}
-		
+
 	$mess = <<<EOT
 
 If you have allocated teams/played matches listed above please enter them

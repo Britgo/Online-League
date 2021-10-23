@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,20 +20,16 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
+
+$Connection = opendatabase(true);
 $club = new Club();
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "New Club";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+lg_html_header("New Club");
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -43,39 +45,30 @@ function formvalid()
 		return true;
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Create New Club</h1>
 <p>Please set up the details of the club as required using the form below.</p>
 <form name="clubform" action="updindclub2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return formvalid();">
-<p>
-Club Code:
-<input type="text" name="clubcode" size="3" maxlength="3">
-Name:
-<input type="text" name="clubname">
-</p>
+<p>Club Code:<input type="text" name="clubcode" size="3" maxlength="3">
+Name:<input type="text" name="clubname"></p>
 <p>
 Contact:<input type="text" name="contname">
 Phone:<input type="text" name="contphone">
-Email:<input type="text" name="contemail">
-</p>
-<p>
-Club website:
-<input type="text" name="website">
+Email:<input type="text" name="contemail"></p>
+<p>Club website:<input type="text" name="website">
 Meeting night:
-<?php
+
+EOT;
 $club->nightopt();
-?>
+print <<<EOT
 </p>
-<p>Set this <input type="checkbox" name="schools"> if the club is in BGA schools.
-</p>
-<p>
-<input type="submit" name="subm" value="Add Club">
-</p>
+<p>Set this <input type="checkbox" name="schools"> if the club is in BGA schools.</p>
+<p><input type="submit" name="subm" value="Add Club"></p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

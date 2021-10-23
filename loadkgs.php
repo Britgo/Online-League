@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -28,6 +35,7 @@ include 'php/game.php';
 include 'php/kgsfetchsgf.php';
 include 'php/news.php';
 
+$Connection = opendatabase(true);
 $g = new Game();
 try  {
 	$g->fromget();
@@ -36,9 +44,7 @@ try  {
 		throw new GameException("Game has already been entered");
 }
 catch (GameException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 
 $date_played = new Matchdate();
@@ -65,29 +71,19 @@ try  {
 catch  (GameException $e)  {
 	$msg = htmlspecialchars($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Game Result Added";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Add Game Result complete</h1>
-<p>
-Finished adding result with SGF for Game between
-<?php
+
+lg_html_header("Game Result Added");
+lg_html_nav();
 print <<<EOT
+<h1>Add Game Result complete</h1>
+<p>Finished adding result with SGF for Game between
 <b>{$g->Wplayer->display_name()}</b>
 ({$g->Wplayer->display_rank()}) of
 {$g->Wteam->display_name()} as White and
 <b>{$g->Bplayer->display_name()}</b>
 ({$g->Bplayer->display_rank()}) of
 {$g->Bteam->display_name()} as Black on
-{$g->date_played()} was {$g->display_result()}.
-</p>
+{$g->date_played()} was {$g->display_result()}.</p>
 
 EOT;
 if (strlen($msg) != 0)  {
@@ -103,8 +99,8 @@ if ($mtch->Result == 'P')  {
 </p>
 
 EOT;
-	$n = new News($userid, "Game completed in {$mtch->Hteam->Name} -v- {$mtch->Ateam->Name} in Division {$mtch->Division}", false, $mtch->showmatch()); 
-	$n->addnews();	
+	$n = new News($Connection->userid, "Game completed in {$mtch->Hteam->Name} -v- {$mtch->Ateam->Name} in Division {$mtch->Division}", false, $mtch->showmatch());
+	$n->addnews();
 }
 else  {
 	$result = 'The winner of the match was ';
@@ -118,11 +114,8 @@ else  {
 <p>The match has now been completed.</p>
 <p>$result.</p>
 EOT;
-	$n = new News($userid, "Match now completed between {$mtch->Hteam->Name} and {$mtch->Ateam->Name} in Division {$mtch->Division}. $result.", true, $mtch->showmatch());
+	$n = new News($Connection->userid, "Match now completed between {$mtch->Hteam->Name} and {$mtch->Ateam->Name} in Division {$mtch->Division}. $result.", true, $mtch->showmatch());
 	$n->addnews();
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

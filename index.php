@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,44 +21,22 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "BGA Online League";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$hasfoot = true;
-include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("BGA Online league");
+lg_html_nav();
+print <<<EOT
 <h1>BGA Online Leagues</h1>
 <img src="images/gogod_shield.medium.jpg" width="359" height="400" alt="Shield picture" align="left" border="0" hspace="20" vspace="5">
 <p>Welcome to the BGA online league site. Please use the menus on the left to select a destination.
 In particulare, to find out more about the league,please <a href="info.php" title="Give more information">go here</a>,
 A full description of playing games is to be found under <a href="playing.php" title="Read description of rules and instructions for playing">rules</a>.
 To see the current league standings, please <a href="league.php" title="Show currennt standings">go here</a>.</p>
-</div>
-</div>
-<div id="Footer">
-<div class="innertube">
-<hr>
-<p class="note">
-This website was designed, authored and programmed by
-<a href="http:/john.collins.name" target="_blank">John Collins</a>.
-</p>
-<?php
-$dat = date("Y");
-print <<<EOT
-<p class="note">Copyright &copy; John Collins 2009-$dat. Licensed under
 
 EOT;
+lg_html_footer(true);
 ?>
-<a href="http://www.gnu.org/licenses/">GPL v3</a>.</p>
-</div>
-</div>
-</body>
-</html>

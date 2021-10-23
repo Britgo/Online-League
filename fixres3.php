@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -27,16 +34,17 @@ include 'php/matchdate.php';
 include 'php/game.php';
 include 'php/news.php';
 
+$Connection = opendatabase(true);
+
 $g = new Game();
 try  {
 	$g->frompost();
 	$g->fetchdets();
 }
 catch (GameException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
+
 $date_played = new Matchdate();
 $date_played->frompost();
 $sgfdata = "";
@@ -48,36 +56,19 @@ if ($date_played->unequal($g->Date))
 $mtch = $g->set_result($_POST["result"], $_POST["resulttype"]);
 if (strlen($sgfdata) != 0)
 	$g->set_sgf($sgfdata);
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Game Result Amended";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Amended Game Result</h1>
-<p>
-Finished amending result for Game between
-<?php
+
+lg_html_header("Game Result Amended");
+lg_html_nav();
 print <<<EOT
+<h1>Amended Game Result</h1>
+<p>Finished amending result for Game between
 <b>{$g->Wplayer->display_name()}</b>
-({$g->Wplayer->display_rank()}) of
-{$g->Wteam->display_name()} as White and
-<b>{$g->Bplayer->display_name()}</b>
-({$g->Bplayer->display_rank()}) of
-{$g->Bteam->display_name()} as Black to be {$g->display_result()}.
-</p>
+({$g->Wplayer->display_rank()}) of {$g->Wteam->display_name()} as White and
+<b>{$g->Bplayer->display_name()}</b> ({$g->Bplayer->display_rank()}) of
+{$g->Bteam->display_name()} as Black to be {$g->display_result()}.</p>
+
 EOT;
-$n = new News($userid, "Amended result in {$mtch->Hteam->Name} -v- {$mtch->Ateam->Name} match in Division {$mtch->Division}", false, $mtch->showmatch());
+$n = new News($Connection->userid, "Amended result in {$mtch->Hteam->Name} -v- {$mtch->Ateam->Name} match in Division {$mtch->Division}", false, $mtch->showmatch());
 $n->addnews();
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

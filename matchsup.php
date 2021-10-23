@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,31 +20,31 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
+include 'php/opendatabase.php';
 include 'php/matchdate.php';
+
+$Connection = opendatabase(true);
 $div = $_GET["div"];
-if (strlen($div) == 0) {
-	include 'php/wrongentry.php';
-	exit(0);
-}
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Initialise Matches for Division $div";
-include 'php/head.php';
+if (strlen($div) == 0)
+	wrongentry("Expected GET parameter");
+
 $md = new Matchdate();
 $md->set_season();
+
+lg_html_header("Initialise Matches for Division $div");
+lg_html_nav();
 print <<<EOT
-<body>
 <h1>Initialise Matches for division $div</h1>
 <form action="matchinit.php" method="post" enctype="application/x-www-form-urlencoded">
 <input type="hidden" name="div" value="$div">
 <p>
+
 EOT;
 $md->dateopt('Starting date');
-?>
+print <<<EOT
 </p>
 <p>Allocate matches every
 <select name="mintnum" size="0">
@@ -58,10 +64,10 @@ $md->dateopt('Starting date');
 <option value="m" selected>months</option>
 </select>
 </p>
-<p>
-<input type="submit" value="Generate Matches">
-</p>
+<p><input type="submit" value="Generate Matches"></p>
 </form>
 <p>Click <a href="javascript:self.close()">here</a> to close this window.</p>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

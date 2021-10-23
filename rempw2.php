@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,21 +20,22 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/club.php';
 
+$Connection = opendatabase(true);
 try {
 	$player = new Player();
 	$player->fromget();
 	$player->fetchdets();
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 $em = $player->Email;
@@ -50,25 +57,12 @@ else {
 	fwrite($fh, "Your password is $pw\n");
 	pclose($fh);
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Remind password completed";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+lg_html_header("Remind password completed");
+lg_html_nav();
 print <<<EOT
 <h1>$Title</h1>
 <p>$Mess</p>
 
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

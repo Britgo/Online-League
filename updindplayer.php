@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,12 +20,15 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
+
+$Connection = opendatabase(true);
 try {
 	$player = new Player();
 	$player->fromget();
@@ -27,19 +36,11 @@ try {
 	$player->fetchclub();
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
 $Title = "Update Player {$player->display_name(false)}";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+lg_html_header($Title);
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -55,11 +56,11 @@ function formvalid()
 		return true;
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+
+EOT;
+lg_html_nav();
 print <<<EOT
-<h1>Update Player {$player->display_name(false)}</h1>
+<h1>$Title</h1>
 <p>Please update the details of the player as required using the form below.</p>
 
 EOT;
@@ -70,12 +71,10 @@ details of the player.</p>
 
 EOT;
 }
-?>
-<p>To enter a new player, you can adjust the fields appropriately
-and press the "Add player" button or you can select the "New Player" menu entry on the left.
-</p>
-<?php
 print <<<EOT
+<p>To enter a new player, you can adjust the fields appropriately
+and press the "Add player" button or you can select the "New Player" menu entry on the left.</p>
+
 <form name="playform" action="updindplayer2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return formvalid();">
 {$player->save_hidden()}
 <table cellpadding="2" cellspacing="5" border="0">
@@ -85,21 +84,27 @@ print <<<EOT
 
 EOT;
 $player->clubopt();
-?>
+print <<<EOT
 </td></tr>
 <tr><td>Rank</td><td><?php $player->rankopt(); ?></td></tr>
-<?php
+
+EOT;
+
 // Try to avoid Firefox guessing userid based on the last thing we typed if not there.
+
 $du = $player->display_userid(0);
 $dp = $player->disp_passwd();
 if (strlen($du) != 0)
 	$du = " value=\"" . $du . "\"";
+
 if (strlen($dp) != 0)
 	$dp = " value=\"" . $dp . "\"";
+
 $okemch = $player->OKemail?" checked": "";
 $bgamemb = $player->BGAmemb?" checked": "";
 $ilpaid = $player->ILpaid?" checked": "";
 $npil = $player->ILdiv == 0? " selected": "";
+
 print <<<EOT
 <tr><td>Userid</td><td><input type="text" name="userid"$du></td></tr>
 <tr><td>Password</td><td><input type="password" name="passw"$dp></td></tr>
@@ -112,7 +117,9 @@ Check if player has agreed to accept automatic emails</td></tr>
 <tr><td>Latest time to phone</td><td>
 
 EOT;
+
 $player->latestopt();
+
 print <<<EOT
 </td></tr>
 <tr><td>Notes</td>
@@ -129,6 +136,7 @@ Player is BGA member.
 <option value="0"$npil>Not playing</option>
 
 EOT;
+
 $maxdivs = max_ildivision() + 1;
 for ($d = 1;  $d <= $maxdivs;  $d++)  {
 	$ild = $player->ILdiv == $d? " selected": "";
@@ -136,7 +144,8 @@ for ($d = 1;  $d <= $maxdivs;  $d++)  {
 <option value="$d"$ild>$d</option>
 
 EOT;
-}	
+}
+
 print <<<EOT
 </select></td></tr>
 <tr><td>Paid I.L subs</td><td><input type="checkbox" name="ilpaid"$ilpaid></td></tr>
@@ -145,13 +154,13 @@ print <<<EOT
 
 EOT;
 $player->adminopt();
-?>
+print <<<EOT
 </td></tr>
 <tr><td><input type="submit" name="subm" value="Add Player"></td>
 <td><input type="submit" name="subm" value="Update Player"></td></tr>
 </table>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

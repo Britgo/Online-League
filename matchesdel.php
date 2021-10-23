@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,37 +20,25 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
+
+$Connection = opendatabase(true);
 $div = $_GET["div"];
-if (strlen($div) == 0) {
-	include 'php/wrongentry.php';
-	exit(0);
-}
-mysql_query("delete from lgmatch where divnum=$div");
-mysql_query("delete from game where divnum=$div and result='N'");
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Delete Matches complete";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Delete Matches Completed</h1>
-<?php
+if (strlen($div) == 0)
+	wrongentry("Expected to be invoked via GET");
+
+$Connection->query("DELETE FROM lgmatch WHERE divnum=$div");
+$Connection->query("DELETE FROM game WHERE divnum=$div and result='N'");
+lg_html_header("Delete matches complete");
+lg_html_nav();
 print <<<EOT
+<h1>Delete Matches Completed</h1>
 <p>Finished deleting matches for Division $div</p>
-EOT;
-?>
 <p>Click <a href="matchupd.php">here</a> to return to the match editing page.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,15 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-ini_set("session.gc_maxlifetime", "18000");
-$phpsessiondir = $_SERVER["DOCUMENT_ROOT"] . "/league/phpsessions";
-if (is_dir($phpsessiondir))
-	session_save_path($phpsessiondir);
-session_set_cookie_params(604800);
-session_start();
-unset($_SESSION['user_id']);
-unset($_SESSION['user_name']);
-unset($_SESSION['user_priv']);
+include 'php/connection.php';
+unset_login();
+
 ?>
 <html>
 <head>

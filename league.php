@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,20 +32,16 @@ include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/itrecord.php';
 include 'php/params.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "League Standings";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("League Standings");
+lg_html_nav();
+print <<<EOT
 <h1>Current League Standings</h1>
 <p>Click <a href="leaguehist.php">here</a> to view previous seasons.</p>
 <div align="center">
-<?php
+
+EOT;
 $pars = new Params();
 $pars->fetchvalues();
 $ml = max_division();
@@ -53,14 +57,14 @@ for ($d = 1; $d <= $ml; $d++) {
 <th>Team</th>
 
 EOT;
-	
+
 	foreach ($tl as $t) {
 		$t->get_scores($pars);
 	}
 	usort($tl, 'score_compare');
-	
+
 	// Insert column header
-	
+
 	foreach ($tl as $t)  {
 		$hd = substr($t->Name, 0, 3);
 		print "<th>$hd</th>\n";
@@ -76,7 +80,7 @@ EOT;
 </tr>
 
 EOT;
-	
+
 	$maxrank = $tl[0]->Sortrank;
 	$minrank = $tl[count($tl)-1]->Sortrank;
 	// This avoids showing prom/releg if they're all the same as with nothing played.
@@ -114,13 +118,13 @@ EOT;
 	if ($d != $ml)
 		print "<br><br><br>\n";
 }
-?>
+print <<<EOT
 </div>
 <p>Key to above: Matches <b>P</b>layed, <b>W</b>on, <b>D</b>rawn, <b>L</b>ost, Games <b>F</b>or, <b>J</b>igo and Games <b>A</b>gainst.
 <span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.</p>
 <p>The record is highlighted in bold where the team given by the row has won all the matches it has played against the
 team given by the column.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

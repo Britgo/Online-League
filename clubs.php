@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,19 +21,16 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Clubs";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("Clubs");
+lg_html_nav();
+print <<<EOT
 <h1>Clubs</h1>
 <table class="clublist">
 <tr>
@@ -39,11 +43,11 @@ include 'php/head.php';
 <th>Night</th>
 <th>Schools</th>
 </tr>
-<?php
-$pemail = strlen($username) != 0;
-$ret = mysql_query("select code from club order by name");
-if ($ret && mysql_num_rows($ret)) {
-	while ($row = mysql_fetch_assoc($ret)) {
+
+EOT;
+$ret = $Connection->query("SELECT code FROM club ORDER BY name");
+if ($ret && $ret->num_rows) {
+	while ($row = $ret->fetch_assoc()) {
 		$p = new Club($row["code"]);
 		$p->fetchdets();
 		$sch = $p->Schools? 'Yes': '-';
@@ -53,7 +57,7 @@ if ($ret && mysql_num_rows($ret)) {
 <td>{$p->display_name()}</td>
 <td>{$p->display_contact()}</td>
 <td>{$p->display_contphone()}</td>
-<td>{$p->display_contemail($pemail)}</td>
+<td>{$p->display_contemail($Connection->logged_in)}</td>
 <td>{$p->display_website()}</td>
 <td>{$p->display_night()}</td>
 <td>$sch</td>
@@ -61,9 +65,6 @@ if ($ret && mysql_num_rows($ret)) {
 EOT;
 	}
 }
+print("</table>\n");
+lg_html_footer();
 ?>
-</table>
-</div>
-</div>
-</body>
-</html>

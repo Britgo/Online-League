@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,23 +20,22 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Players List";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("Players List");
+lg_html_nav();
+print <<<EOT
 <h1>Players</h1>
-<?php
+
+EOT;
+
 switch ($_GET["by"])  {
 default:
 	$pclub = 1;
@@ -70,6 +75,7 @@ if (count($initials) != 0)  {
 	print <<<EOT
 <a name="Top"></a>
 <table class="plinits"><tr>
+
 EOT;
 	if ($byrank) {
 		foreach ($initials as $init) {
@@ -77,9 +83,9 @@ EOT;
 			print "<td><a href=\"#{$r->anchor()}\">{$r->display()}</a></td>\n";
 		}
 	}
-	else  {			
+	else  {
 		foreach ($initials as $init) {
-			print "<td><a href=\"#$init\">$init</a></td>\n";	
+			print "<td><a href=\"#$init\">$init</a></td>\n";
 		}
 	}
 	print "</tr></table>\n";
@@ -115,12 +121,12 @@ print <<<EOT
 
 EOT;
 
-$ret = mysql_query("select first,last,club.name from player,club where player.club=club.code order by $order");
-if ($ret && mysql_num_rows($ret)) {
+$ret = $Connection->query("SELECT first,last,club.name FROM player,club WHERE player.club=club.code ORDER BY $order");
+if ($ret && $ret->num_rows) {
 	$lclub = "not set";
 	$linit = "-";
 	$lrank = new Rank(4000);
-	while ($row = mysql_fetch_assoc($ret)) {
+	while ($row = $ret->fetch_assoc()) {
 		$p = new Player($row["first"], $row["last"]);
 		$p->fetchdets();
 		$club = $row["name"];
@@ -135,6 +141,7 @@ if ($ret && mysql_num_rows($ret)) {
 <a href="#Top">{$nrank->display()}</a>
 </th>
 </tr>
+
 EOT;
 			}
 		}
@@ -149,6 +156,7 @@ EOT;
 <a href="#Top">$pinit</a>
 </th>
 </tr>
+
 EOT;
 			}
 		}
@@ -185,10 +193,10 @@ EOT;
 		print "</tr>\n";
 	}
 }
-?>
+print <<<EOT
 </table>
 <p>Click on player name to get details and game record for player.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

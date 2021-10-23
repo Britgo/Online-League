@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,23 +20,20 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/matchdate.php';
 include 'php/news.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "News items";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("News Items");
+lg_html_nav();
+print <<<EOT
 <h1>News</h1>
 <p>The following is a list in reverse date order of events on the league and
 the website.</p>
@@ -42,11 +45,12 @@ update was made not necessarily when a game was played.</p>
 <th>Userid</th>
 <th>Item</th>
 </tr>
-<?php
-if ($logged_in) {
+
+EOT;
+if ($Connection->logged_in) {
 	try {
 		$player = new Player();
-		$player->fromid($userid);
+		$player->fromid($Connection->userid);
 		$triv = $player->Trivia;
 	}
 	catch (PlayerException $e) {
@@ -58,10 +62,10 @@ else
 if ($triv)
 	$triv = "";
 else
-	$triv = " where trivial=0";
-$ret = mysql_query("select ndate,user,item,link from news$triv order by ndate desc");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_assoc($ret))  {
+	$triv = " WHERE trivial=0";
+$ret = $Connection->query("SELECT ndate,user,item,link FROM news$triv ORDER BY ndate desc");
+if ($ret && $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_assoc())  {
 		$n = new News();
 		$n->fromrow($row);
 		$lnk = $n->display_link();
@@ -80,9 +84,8 @@ if ($ret && mysql_num_rows($ret) > 0)  {
 EOT;
 	}
 }
-?>
+print <<<EOT
 </table>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();

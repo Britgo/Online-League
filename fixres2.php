@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,40 +32,30 @@ include 'php/teammemb.php';
 include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/game.php';
+
+$Connection = opendatabase(true);
+
 $g = new Game();
 try  {
 	$g->fromget();
 	$g->fetchdets();
 }
 catch (GameException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Edit Game Result";
-include 'php/head.php';
-?>
-<body>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Edit Game Result</h1>
-<p>
-Editing result for Game between
-<?php
+
+lg_html_header("Edit Game Result");
+lg_html_nav();
 print <<<EOT
+<h1>Edit Game Result</h1>
+<p>Editing result for Game between
 <b>{$g->Wplayer->display_name(false)}</b>
 ({$g->Wplayer->display_rank()}) of
 {$g->Wteam->display_name()} as White and
 <b>{$g->Bplayer->display_name(false)}</b>
 ({$g->Bplayer->display_rank()}) of
-{$g->Bteam->display_name()} as Black.
-</p>
+{$g->Bteam->display_name()} as Black.</p>
+
 EOT;
 if ($g->Result != 'N') {
 	print <<<EOT
@@ -68,8 +65,8 @@ EOT;
 }
 print <<<EOT
 <form action="fixres3.php" name="resform" method="post" enctype="multipart/form-data">
-{$g->save_hidden()}
-<p>
+{$g->save_hidden()}<p>
+
 EOT;
 $g->Date->dateopt("Game was played on");
 $ws=$bs=$js=$selr=$selt=$selh="";
@@ -123,8 +120,7 @@ switch ($g->Result) {
 }
 print <<<EOT
 </p>
-<p>
-Result was
+<p>Result was
 <select name="result" size="0">
 <option value="W"$ws>White Win</option>
 <option value="B"$bs>Black Win</option>
@@ -144,15 +140,14 @@ for ($v = 0; $v < 50; $v++)
 		print "<option value=$v>$v.5</option>\n";
 print <<<EOT
 <option value="H"$selh>Over 50</option>
-EOT;
-?>
+
 </select></p>
 <p>SGF file of the game to upload or replace <input type=file name=sgffile></p>
 <p>When done, press this:<input type="submit" value="Edit result"></p>
 </form>
 <p>If you never meant to get to this page
 <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

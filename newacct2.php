@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -20,7 +26,9 @@ if (isset($_POST["turnoff"]) || !isset($_POST["turnon"]))  {
 	system("sleep 60");
 	exit(0);
 }
-
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -28,6 +36,8 @@ include 'php/player.php';
 include 'php/genpasswd.php';
 include 'php/newaccemail.php';
 include 'php/assildiv.php';
+
+$Connection = opendatabase();
 
 $playname = $_POST["playname"];
 $userid = $_POST["userid"];
@@ -44,16 +54,11 @@ $joinil = isset($_POST["join"]);
 $notes = $_POST["notes"];
 $latest = $_POST["latesttime"];
 
-if  (strlen($playname) == 0)  {
-	$mess = "No player name given";
-	include 'php/wrongentry.php';
-	exit(0);
-}
-if  (strlen($userid) == 0)  {
-	$mess = "No user name given";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+if  (strlen($playname) == 0)
+   wrongentry("No player name given");
+
+if  (strlen($userid) == 0)
+   wrongentry("No user name given");
 
 //  Get player name and check he doesn't clash
 
@@ -61,35 +66,27 @@ try {
 	$player = new Player($playname);
 }
 catch (PlayerException $e) {
-   $mess = $e->getMessage();
-   include 'php/wrongentry.php';
-   exit(0);
+   wrongentry($e->getMessage());
 }
 
-$ret = mysql_query("select first,last from player where {$player->queryof()}");
-if ($ret && mysql_num_rows($ret) != 0)  {
-	$column = "name";
-	$value = $player->display_name(false);
-	include 'php/nameclash.php';
-	exit(0);
-}
+$ret = $Connection->query("SELECT first,last FROM player WHERE {$player->queryof()}");
+if ($ret && $ret->num_rows != 0)
+	clash_item("name", $player->display_name(false));
 
 function checkclash($column, $value) {
 	if (strlen($value) == 0)
 		return;
-	$qvalue = mysql_real_escape_string($value);
-	$ret = mysql_query("select $column from player where $column='$qvalue'");
-	if ($ret && mysql_num_rows($ret) != 0)  {
-		include 'php/nameclash.php';
-		exit(0);
-	}
+	$qvalue = $Connection->real_escape_string($value);
+	$ret = $Connection->query("SELECT $column FROM player WHERE $column='$qvalue'");
+	if ($ret && $ret->num_rows != 0)
+		clash_item("$column", $value);
 }
 
 // Check user name, KGS and IGS accounts (if any) don't clash
 
 checkclash('user', $userid);
 checkclash('kgs', $kgs);
-checkclash('igs', $igs); 
+checkclash('igs', $igs);
 
 $player->Rank = new Rank($rank);
 $player->Club = new Club($club);
@@ -114,24 +111,13 @@ if (strlen($passw) == 0)
 
 $player->set_passwd($passw);
 newaccemail($email, $userid, $passw);
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "New account $userid created OK";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php';
+lg_html_header("New account $userid created OK");
+lg_html_nav();
 print <<<EOT
 <h1>$Title</h1>
 <p>Your account $userid has been successfully created and you should be receiving
 a confirmatory email.</p>
 
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

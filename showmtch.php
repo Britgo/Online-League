@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -26,6 +34,9 @@ include 'php/matchdate.php';
 include 'php/game.php';
 include 'php/params.php';
 include 'php/hcp_message.php';
+include 'php/jumpto.php';
+
+$Connection = opendatabase();
 
 $pars = new Params();
 $pars->fetchvalues();
@@ -38,40 +49,20 @@ try  {
 	$mtch->fetchgames();
 }
 catch (MatchException $e) {
-	if ($e->Nfound) {
-		$loc = "histshowmtch.php?hmi={$e->Mid}";
-		include 'php/jumpto.php';
-		exit(0);
-	}
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	if ($e->Nfound)
+		jumpto("histshowmtch.php?hmi={$e->Mid}");
+   wrongentry($e->getMessage());
 }
 $editok = $admin || $mtch->is_captain($username) != 'N';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
 $Title = "Match Details";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Match Details</h1>
-<p>
-Match is between
-<?php
+lg_html_header($Title);
+lg_html_nav();
 print <<<EOT
-{$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
-and
-{$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()})
-in
-{$mtch->Date->display_month()}.
-</p>
+<h1>Match Details</h1>
+<p>Match is between {$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
+and {$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()}) in {$mtch->Date->display_month()}.</p>
 <p>Team captains are {$mtch->Hteam->display_captain(true)} for {$mtch->Hteam->display_name()}
-and {$mtch->Ateam->display_captain(true)} for {$mtch->Ateam->display_name()}.
-</p>
+and {$mtch->Ateam->display_captain(true)} for {$mtch->Ateam->display_name()}.</p>
 
 EOT;
 if ($mtch->Defaulted) {
@@ -137,6 +128,7 @@ EOT;
 <td>{$g->Bteam->display_name()}</td>
 <td>{$g->display_result($editok || $g->playerin($username))}</td>
 </tr>
+
 EOT;
 		$board++;
 	}
@@ -169,10 +161,10 @@ EOT;
 		print "</table>\n";
 	}
 }
-?>
+print <<<EOT
 <p>Click <a href="javascript:history.back()">here</a> to return to your previous page
 or <a href="matches.php">here</a> to look at other matches.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

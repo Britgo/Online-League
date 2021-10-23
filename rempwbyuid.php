@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -16,20 +22,21 @@
 
 // This is invoked from a subwindow so we don't do the frame emulation stuff.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/club.php';
 
+$Connection = opendatabase();
 try {
 	$player = new Player();
 	$player->fromid($_GET['uid']);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 $em = $player->Email;
@@ -51,17 +58,12 @@ else {
 	fwrite($fh, "Your password is $pw\n");
 	pclose($fh);
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-include 'php/head.php';
+lg_html_header($Title);
+lg_html_nav();
 print <<<EOT
-<body>
 <h1>$Title</h1>
 <p>$Mess</p>
+<p>Please click <a href="javascript:self.close();">here</a> to close this window.</p>
+
 EOT;
 ?>
-<p>Please click <a href="javascript:self.close();">here</a> to close this window.</p>
-</body>
-</html>

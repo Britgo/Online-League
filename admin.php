@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,22 +21,16 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Admin Page";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+$Connection = opendatabase(true);
+
+lg_html_header("Admin Page");
+lg_html_nav();
+print <<<EOT
 <h1>Administration</h1>
 <p>This menu is only intended for administration purposes.
 Team captains can assign teams and update results on the matches selection.</p>
@@ -77,7 +78,7 @@ Team captains can assign teams and update results on the matches selection.</p>
 <td><a href="cronadj.php" class="memb" title="Cron settings">Adjust cron settings</a></td>
 </tr>
 </table>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

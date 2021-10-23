@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,14 +20,15 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 
-include 'php/opendatabase.php';
+$Connection = opendatabase(true);
 
 $subj = $_POST["subject"];
 $emailrep = $_POST["emailrep"];
@@ -48,22 +55,22 @@ $mlist = array();
 foreach ($allilpl as $p)  {
 	// Get details of player
 	$p->fetchdets();
-	
+
 	// If no email, nothing to do
 	if (strlen($p->Email) == 0)
 		continue;
-	
+
 	// If person has paid and we are only messaging unpaid or vice versa, skip him
-	
+
 	if ($p->ILpaid)  {
 		if ($paid == 'U')
 			continue;
 	}
 	elseif  ($paid == 'P')
 		continue;
-		
+
 	// If we are sending to active or inactive players, we have to get scores
-	
+
 	if ($active != "A")  {
 		$p->get_scores();
 		$ng = $p->played_games(true, 'I');
@@ -74,9 +81,9 @@ foreach ($allilpl as $p)  {
 		elseif ($active == 'I')  // Played, skip if he hasn't
 			continue;
 	}
-	
+
 	// Record player by email address
-	
+
 	$mlist[$p->Email] = 1;
 }
 
@@ -106,22 +113,13 @@ foreach (array_keys($mlist) as $dest) {
 	fwrite($fh, "$mess\n");
 	pclose($fh);
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Message Sent to individual league players";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+lg_html_header("Message Sent to individual league players");
+lg_html_nav();
+print <<<EOT
 <h1>Message sent to individual league players</h1>
 <p>I think your message was sent OK to individual league players.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

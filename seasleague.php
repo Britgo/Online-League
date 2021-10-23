@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -28,40 +36,25 @@ include 'php/matchdate.php';
 include 'php/params.php';
 include 'php/itrecord.php';
 
+$Connection = opendatabase();
 try {
 	$seas = new Season();
 	$seas->fromget();
 	$seas->fetchdets();
 }
 catch (SeasonException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "League Standings";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Historic League Standings</h1>
-<?php
+lg_html_header("League Standings");
+lg_html_nav();
 print <<<EOT
-<p>
-This is the final league table for
+<h1>Historic League Standings</h1>
+<p>This is the final league table for
 <b>{$seas->display_name()}</b>, the start date for which was
-{$seas->display_start()} and the end was {$seas->display_end()}.
-</p>
+{$seas->display_start()} and the end was {$seas->display_end()}.</p>
+<div align="center">
 
 EOT;
-?>
-<div align="center">
-<?php
 $pars = new Params();
 $pars->fetchvalues();
 $ml = hist_max_division($seas);
@@ -70,14 +63,12 @@ for ($d = 1; $d <= $ml; $d++) {
 	$cn = 7 + count($tl);
 	print <<<EOT
 <table class="league">
-<tr>
-<th colspan="$cn" align="center">Division $d</th>
-</tr>
+<tr><th colspan="$cn" align="center">Division $d</th></tr>
 <tr>
 <th>Team</th>
 
 EOT;
-	
+
 	// Historical teams now have sort order saved
 
 	foreach ($tl as $t)  {
@@ -85,7 +76,7 @@ EOT;
 	}
 	usort($tl, 'hist_score_compare');
 		// Insert column header
-	
+
 	foreach ($tl as $t)  {
 		$hd = substr($t->Name, 0, 3);
 		print "<th>$hd</th>\n";
@@ -138,14 +129,14 @@ EOT;
 	if ($d != $ml)
 		print "<br><br><br>\n";
 }
-?>
+
+print <<<EOT
 </div>
 <p>Key to above: Matches <b>P</b>layed, <b>W</b>on, <b>D</b>rawn, <b>L</b>ost, Games <b>F</b>or, <b>J</b>igo and Games <b>A</b>gainst.
-<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.
-</p>
+<span class="prom">Promotion Zone</span> and <span class="releg">Relegation Zone</span>.</p>
 <h2>Other Seasons</h2>
 <p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

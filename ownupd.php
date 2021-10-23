@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,30 +20,24 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
+
+$Connection = opendatabase(true);
 try {
 	$player = new Player();
-	$player->fromid($userid);
+	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Update Player Details";
-include 'php/head.php';
+lg_html_header("Update Player Details");
 print <<<EOT
-<body>
-<script language="javascript" src="webfn.js"></script>
 <script language="javascript">
 function formvalid()
 {
@@ -51,16 +51,12 @@ function formvalid()
 </script>
 
 EOT;
-include 'php/nav.php';
+lg_html_nav();
 print <<<EOT
 <h1>Update Details userid {$player->display_userid(0)}</h1>
 <p>Please update your details as required using the form below.</p>
-EOT;
-?>
 <p>Please note that email addresses are <b>not</b> published anywhere. The "send email" links are
 all indirect.</p>
-<?php
-print <<<EOT
 <form name="playform" action="ownupd2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return formvalid();">
 {$player->save_hidden()}
 <table cellpadding="2" cellspacing="5" border="0">
@@ -124,13 +120,10 @@ EOT;
 print <<<EOT
 <tr><td>Notes</td>
 <td><input type="text" name="notes" value="{$player->display_notes()}" size="40"></td></tr>
-
-EOT;
-?>
 </table>
 <p><input type="submit" name="subm" value="Update Details"></p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

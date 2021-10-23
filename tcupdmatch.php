@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -18,8 +24,9 @@
 // their own team members in ignorance of what the other team are doing
 // Also they can't change it once the other side have allocated their team.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -31,6 +38,7 @@ include 'php/matchdate.php';
 include 'php/game.php';
 include 'php/params.php';
 
+$Connection = opendatabase(true);
 $pars = new Params();
 $pars->fetchvalues();
 
@@ -47,23 +55,14 @@ try  {
 		throw new MatchException("Teams already fully allocated to match");
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 
 // Is this a "handicappable" division?
 
 $hcapable = $mtch->Division >= $pars->Hdiv;
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Edit Match";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+lg_html_header("Edit Match");
+print <<<EOT
 <script language="javascript">
 function checkteamvalid() {
 	var 	form = document.matchform;
@@ -85,10 +84,14 @@ function checkteamvalid() {
 			}
 		}
 	}
-	return true;		
+	return true;
 }
 </script>
-<?php
+
+EOT;
+
+lg_html_nav();
+
 
 // Load members of team and at the same time check we've got enough
 
@@ -103,9 +106,9 @@ make up a match with.
 </p>
 <p>Please <a href="javascript:history.back()">click here</a> to go back
 or <a href="teamsupd.php">here</a> to update teams.</p>
-</body>
-</html>
+
 EOT;
+		lg_html_footer();
 		exit(0);
 	}
 	foreach ($result as $p) {
@@ -122,13 +125,10 @@ else  {
 	$Myteam = $mtch->Ateam;
 	$Histeam = $mtch->Hteam;
 }
-$Tmemb = checkteam($Myteam);  
-?>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Allocate team members to match</h1>
-<?php
+$Tmemb = checkteam($Myteam);
+
 print <<<EOT
+<h1>Allocate team members to match</h1>
 <p>This page is for allocation of members of the
 {$Myteam->display_name()} ({$Myteam->display_description()})
 for the division {$mtch->Division} match in
@@ -140,7 +140,7 @@ for the division {$mtch->Division} match in
 </p>
 <p>
 The players will normally be sorted into descending order of rank, so if you need to
-adjust the team members' ranks
+adjust ranks of the team members
 <a href="updrank.php?{$Myteam->urlof()}">go here first</a>.
 
 EOT;
@@ -156,15 +156,17 @@ EOT;
 $ce = $Histeam->display_capt_email();
 if (strlen($ce) != 0)
 	print <<<EOT
-<p>If you want to email the captain of {$Histeam->display_name()} first click here $ce.
-</p>
+<p>If you want to email the captain of {$Histeam->display_name()} first click here $ce.</p>
+
 EOT;
+
 print <<<EOT
 <form name="matchform" action="tcupdmatch2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return checkteamvalid()">
 {$mtch->save_hidden()}
 {$Myteam->save_hidden()}
 <table class="updmatch">
 <tr><th>Player assignments</th></tr>
+
 EOT;
 
 $ng = $mtch->ngames();
@@ -182,28 +184,34 @@ for ($row = 0; $row < 3; $row++)  {
 	print <<<EOT
 <select name="tm$row">
 <option value="-">-</option>
+
 EOT;
 	foreach ($Tmemb as $memb) {
 		$val = $memb->selof();
 		if ($matchm && $matchm->is_same($memb))
 			print <<<EOT
 <option value="$val" selected>
+
 EOT;
 		else
 			print <<<EOT
 <option value="$val">
+
 EOT;
 		print <<<EOT
 {$memb->display_name(false)} ({$memb->display_rank()})
 </option>
+
 EOT;
 	}
 	print <<<EOT
 </select>
 </td></tr>
+
 EOT;
 }
-?>
+
+print <<<EOT
 </table>
 <p><input type="checkbox" name="forceass">
 <b>Check this</b> to force board assignments rather than having them sorted into rank order.</p>
@@ -213,7 +221,7 @@ EOT;
 <p>Colours will be assigned randomly. Note again that teams will be sorted into descending order of rank unless you select
 the above checkbox. Click on the link above if you need to adjust the ranks.</p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

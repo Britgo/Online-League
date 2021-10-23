@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,64 +21,29 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/matchdate.php';
 
+$Connection = opendatabase(true);
+
 $player = new Player();
 try {
-	$player->fromid($userid);
+	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-	print <<<EOT
-<html>
-<head>
-<title>Unknown player</title>
-<link href="/league/bgaleague-style.css" type="text/css" rel="stylesheet"></link>
-</head>
-<body>
-<h1>Unknown player</h1>
-<p>Sorry, but player name $userid is not known.</p>
-<p>Please start again from the top by <a href="index.php" title="Go back to home page">clicking here</a>.</p>
-</body>
-</html>
-
-EOT;
-	exit(0);
+	il_unknown_player_id($Connection->userid);
 }
-if ($player->ILdiv == 0)  {
-	print <<<EOT
-<html>
-<head>
-<title>Not in league</title>
-<link href="/league/bgaleague-style.css" type="text/css" rel="stylesheet"></link>
-</head>
-<body class="il">
-<h1>Not in individual league</h1>
-<p>Sorry, but you, {$player->display_name(false)} are not currently in the individual
-league.</p>
-<p>If you want to join it, please update your account
-<a href="ownupd.php" title="Edit you own details, including joining the Individual League">here</a>,
-otherwise please go back to the top by  <a href="index.php" title="Go back to home page">clicking here</a>.</p>
-</body>
-</html>
+if ($player->ILdiv == 0)
+	il_not_in_league($player);
 
-EOT;
-	exit(0);
-}
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Add result in individual League";
-include 'php/head.php';
-?>
-<body class="il">
-<script language="javascript" src="webfn.js"></script>
+lg_html_header("Add result in individual league", "il");
+print <<<EOT
 <script language="javascript">
 function checkform() {
 	var fm = document.ilresf;
@@ -135,7 +107,10 @@ function checknokgs() {
 	return confirm("Are you sure that this game was not played on KGS so you can download it?");
 }
 </script>
-<?php include 'php/nav.php'; ?>
+
+EOT;
+lg_html_nav();
+print<<<EOT
 <h1>Add result for Individual League</h1>
 <p>Welcome
 <?php
@@ -145,29 +120,28 @@ online name
 <b>{$player->display_online()}</b>
 from Division
 {$player->ILdiv}.
-
-EOT;
-?>
 </p>
-<p>To enter the individual league match result, please complete the form below:
-</p>
+<p>To enter the individual league match result, please complete the form below:</p>
 <form action="addilresultb2.php" method="post" enctype="multipart/form-data" name="ilresf" onsubmit="javascript: return checkform();">
 <?php print $player->save_hidden("pl"); ?>
 <table cellpadding="2" cellspacing="5" border="0">
 <tr>
 	<td>Match was played on</td>
 	<td>
-<?php
+
+EOT;
 $dat = new Matchdate();
 $dat->dateopt("");
-?>
+print <<<EOT
 	</td>
 </tr>
 <tr><td></td><td>NB Date <b>started</b> if it crosses midnight</td></tr>
 <tr>
 	<td>Opponent was</td>
 	<td><select name="opp">
-<?php
+
+EOT;
+
 $pl = list_players_ildiv($player->ILdiv);
 foreach ($pl as $p) {
 	if ($p->is_same($player))
@@ -181,7 +155,7 @@ foreach ($pl as $p) {
 
 EOT;
 }
-?>
+print <<<EOT
 	</select></td>
 </tr>
 <tr>
@@ -197,10 +171,11 @@ EOT;
 <option value="N" selected>Not known</option>
 <option value="R">Resign</option>
 <option value="T">Time</option>
-<?php
+
+EOT;
 for ($v = 0; $v < 50; $v++)
 	print "<option value=$v>$v.5</option>\n";
-?>
+print <<<EOT
 <option value="H">Over 50</option>
 </select>
 </td>
@@ -222,7 +197,7 @@ for ($v = 0; $v < 50; $v++)
 </tr>
 </table>
 </form>
-</div>
-</div>
-</body>
-</html>
+EOT;
+
+lg_html_footer();
+?>

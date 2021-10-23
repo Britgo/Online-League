@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,23 +20,19 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/match.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Update Matches";
-include 'php/head.php';
-?>
-<body onunload="javascript:killwind()">
-<script language="javascript" src="webfn.js"></script>
+
+$Connection = opendatabase(true);
+lg_html_header("Update Matches", NULL, NULL, "javascript:killwind()");
+print <<<EOT
 <script language="javascript">
 var miwind = null;
 
@@ -64,15 +66,14 @@ function archive() {
 		location = "archive.php";
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Update Matches</h1>
-<p>
-Use this page to allocate matches and assign players. 
-</p>
-<?php
+<p>Use this page to allocate matches and assign players.</p>
+
+EOT;
 $maxdiv = max_division();
 for ($div = 1;  $div <= $maxdiv;  $div++)  {
 	print <<<EOT
@@ -81,33 +82,31 @@ EOT;
 	$nm = count_matches_for($div);
 	if ($nm == 0)  {
 		print <<<EOT
-<p>
-Click <a href="javascript:initmatches($div)">here</a> to perform the draw of matches for division $div.
-</p>
+<p>Click <a href="javascript:initmatches($div)">here</a> to perform the draw of matches for division $div.</p>
+
 EOT;
 	}
 	else  {
 		print <<<EOT
 <p>Click <a href="matchtmupd.php?div=$div">here</a> to allocate/update team members for matches in division $div.</p>
 <p>Click <a href="javascript:okdel($div)">here</a> to delete the matches for division $div.</p>
+
 EOT;
 	}
 	print <<<EOT
-<p>
-Click <a href="addmatch.php?div=$div">here</a> to create an individual match in division $div
-outside the draw, e.g. for tie-breaks.
-</p>
+<p>Click <a href="addmatch.php?div=$div">here</a> to create an individual match in division $div
+outside the draw, e.g. for tie-breaks.</p>
 
 EOT;
 }
-?>
+print <<<EOT
 <h2>End Season</h2>
 <p>Click <a href="javascript:endseas()">here</a> to delete unplayed matches and mark as drawn
 all outstanding games in partly-played matches.</p>
 <h2>Complete league and assign to history</h2>
 <p>Click <a href="javascript:archive()">here</a> to consign played matches to history,
 promote and relegate teams ready to draw for next season.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

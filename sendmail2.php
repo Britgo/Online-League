@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -16,12 +22,16 @@
 
 //   No frame-ish stuff - done in new window
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
+include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
-include 'php/opendatabase.php';
+
+$Connection = opendatabase(true);
+
 try {
 	$via = $_POST["via"];
 	switch ($via) {
@@ -42,20 +52,14 @@ try {
 	}
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 catch (ClubException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-if (strlen($dest) == 0) {
-$mess = "No email dest";
-include 'php/dataerror.php';
-exit(0);
-}
+if (strlen($dest) == 0)
+   database_error("No email dest");
+
 $subj = $_POST["subject"];
 $emailrep = $_POST["emailrep"];
 $mess = $_POST["messagetext"];
@@ -65,20 +69,13 @@ if (strlen($emailrep) != 0)
 $fh = popen("{$rt}mail -s 'Go League email - $subj' $dest", "w");
 fwrite($fh, "$mess\n");
 pclose($fh);
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Message Sent to $name";
-include 'php/head.php';
-?>
-<body>
-<?php
+lg_html_header("Message Sent to $nam");
+lg_html_nav();
 print <<<EOT
 <h1>Message sent to $name</h1>
 <p>I think your message was sent OK to $name.</p>
-EOT;
-?>
 <p>Please click <a href="javascript:self.close();">here</a> to close this window.</p>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

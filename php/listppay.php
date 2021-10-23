@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -16,7 +22,7 @@
 
 try {
 	$player = new Player();
-	$player->fromid($userid);
+	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
 	$mess = $e->getMessage();
@@ -28,9 +34,9 @@ catch (PlayerException $e) {
 // trying to pay the same thing.
 // However we delete payments more than 15 minutes old first.
 
-$ret = mysql_query("delete from pendpay where paywhen < date_sub(current_timestamp, interval 15 minute)");
+$ret = $Connection->query("DELETE FROM pendpay WHERE paywhen < date_sub(current_timestamp, interval 15 minute)");
 if (!$ret)  {
-    $mess = mysql_error();
+    $mess = $Connection->error;
     include 'dataerror.php';
     exit(0);
 }
@@ -40,9 +46,9 @@ if (!$ret)  {
 $pend_teams = array();
 $pend_indiv = array();
 
-$ret = mysql_query("select ind,league,descr1,descr2 from pendpay");
-if ($ret and mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_assoc($ret))  {
+$ret = $Connection->query("SELECT ind,league,descr1,descr2 FROM pendpay");
+if ($ret and $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_assoc())  {
 		switch ($row["league"])  {
 		case "T":
 			$pend_teams[$row["descr1"]] = $row["ind"];
@@ -59,10 +65,10 @@ if ($ret and mysql_num_rows($ret) > 0)  {
 // First get ourselves a list of unpaid teams
 
 $unpaid_teams = array();
-$ret = mysql_query("select name from team where paid=0 and playing!=0 order by name");
+$ret = $Connection->query("SELECT name FROM team WHERE paid=0 and playing!=0 ORDER BY name");
 try {
-	if ($ret and mysql_num_rows($ret) > 0)  {
-		while ($row = mysql_fetch_array($ret))  {
+	if ($ret and $ret->num_rows > 0)  {
+		while ($row = $ret->fetch_array())  {
 			$name = $row[0];
 			if (isset($pend_teams[$name]))		// Cream out "pending" teams
 				continue;
@@ -83,9 +89,9 @@ catch (TeamException $e) {
 foreach ($unpaid_teams as $team)  {
 	$team->Subs = 15;
 	$membs = $team->list_members();
-	
+
 	// Add £5 for each non BGA member
-	
+
 	foreach ($membs as $memb) {
 		$memb->fetchdets();
 		if (!$memb->BGAmemb)  {
@@ -101,9 +107,9 @@ foreach ($unpaid_teams as $team)  {
 // Likewise get list of unpaid indiv league players
 
 $unpaid_il = array();
-//$ret = mysql_query("select first,last from player where ildiv!=0 and ilpaid=0 order by last,first");
+//$ret = $Connection->query("SELECT first,last FROM player WHERE ildiv!=0 and ilpaid=0 ORDER BY last,first");
 //if ($ret) {
-//	while ($row = mysql_fetch_array($ret))  {
+//	while ($row = $ret->fetch_array())  {
 //		$f = $row[0];
 //		$l = $row[1];
 //		if (isset($pend_indiv["$f $l"]))		// Cream out "pending" players

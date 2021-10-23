@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2013 John Collins
+//   Copyright 2013-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,16 +33,16 @@ include 'php/match.php';
 include 'php/player.php';
 include 'php/game.php';
 
+$Connection = opendatabase(true);
+
 // Get who I am
 
 try {
 	$player = new Player();
-   $player->fromid($userid);
+   $player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-   $mess = $e->getMessage();
-   include 'php/wrongentry.php';
-   exit(0);
+	wrongentry($e->getMessage());
 }
 
 // If these refer to specific match or game get the details.
@@ -44,11 +52,9 @@ if (isset($_GET["mi"]))
 	$mid = $_GET["mi"];
 if (isset($_GET["gn"]))
 	$gid = $_GET["gn"];
-	
+
 if ($mid == 0 && $gid == 0) {
-	 $mess = "Unknown message topic";
-    include 'php/wrongentry.php';
-    exit(0);
+	 wrongentry("Unknown message topic");
 }
 
 // If it's about a match, I must be team captain of one of the teams, recipient is the one who isn't me
@@ -60,9 +66,7 @@ if ($mid != 0) {
 		$match->fetchteams();
 	}
 	catch (MatchException $e)  {
-		$mess = $e->getMessage();
-      include 'php/wrongentry.php';
-      exit(0);
+		wrongentry($e->getMessage());
 	}
 	$hteam = $match->Hteam;
 	$ateam = $match->Ateam;
@@ -81,14 +85,10 @@ else  {
 		$match->fetchteams();		// Prefer to get from match although should be the same
 	}
 	catch (GameException $e)  {
-		$mess = $e->getMessage();
-      include 'php/wrongentry.php';
-      exit(0);
+		wrongentry($e->getMessage());
 	}
 	catch (MatchException $e)  {
-		$mess = $e->getMessage();
-      include 'php/wrongentry.php';
-      exit(0);
+		wrongentry($e->getMessage());
 	}
 	$hteam = $match->Hteam;
 	$ateam = $match->Ateam;
@@ -97,31 +97,22 @@ else  {
 		$recip = $game->Bplayer;
 	$subj = htmlspecialchars("Game for Match: {$hteam->display_name()} -v- {$ateam->display_name()}");
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Compose a message";
-include 'php/head.php';
-?>
-<body>
-<?php include 'php/nav.php'; ?>
+lg_html_header("Compose a message");
+lg_html_nav();
+print <<<EOT
 <h1>Compose a message</h1>
 <p>Use this form to generate a message on the internal message board
 visible to a user when he/she next logs in.</p>
 <p>Do not use this form to arrange games for matches, instead use the messages
 page and select the game in question.</p>
 <form action="sendgmsg.php" method="post" enctype="application/x-www-form-urlencoded">
-<?php
-print <<<EOT
 <input type="hidden" name="mi" value="$mid" />
 <input type="hidden" name="gn" value="$gid" />
 
-EOT;
-?>
 <p>Send the message to:
 <select name="recip">
-<?php
+
+EOT;
 $pllist = list_players();
 foreach ($pllist as $pl) {
 	$pl->fetchdets();
@@ -134,16 +125,13 @@ EOT;
 print <<<EOT
 </select></p>
 <p>Subject: <input type="text" name="subject" value="$subj" size="40" /></p>
-
-EOT;
-?>
 <p>Message:</p>
 <br clear="all" />
 <textarea name="mcont" rows="20" cols="60"></textarea>
 <br clear="all" />
 <p>Then <input type="submit" value="Send Message" /> when ready.</p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

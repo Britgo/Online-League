@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -16,11 +22,9 @@
 
 // Complete "team captain" version of team allocation
 
-include 'php/session.php';
-if (!$logged_in) {
-	include 'php/horses.php';
-	exit(0);
-}
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -36,11 +40,11 @@ include 'php/params.php';
 include 'php/hcp_message.php';
 include 'php/mailalloc.php';
 
-$pars = new Params();
-$pars->fetchvalues();
-
-$mtch = new Match();
+$Connection = opendatabase(true);
 try  {
+	$pars = new Params();
+	$pars->fetchvalues();
+	$mtch = new Match();
 	$mtch->frompost();
 	$mtch->fetchdets();
 	$mtch->fetchteams();
@@ -56,15 +60,14 @@ try  {
 		$Histeam = $mtch->Hteam;
 	}
 }
+catch (ParamException $e) {
+	wrongentry($e->getMessage());
+}
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+   wrongentry($e->getMessage());
 }
 
 // Is this a "handicappable" division
@@ -140,10 +143,10 @@ else {
 					$col = 0;
 				}
 			} // End of looking at existing w/b defined
-			
+
 			// If handicapable and above number of stones to be deducted and
 			// Weaker player is white, swap players
-			
+
 			if ($hcapable && $g->Bplayer->Rank->Rankvalue - $g->Wplayer->Rank->Rankvalue > $hred)  {
 				$tmp = $g->Wteam;
 				$g->Wteam = $g->Bteam;
@@ -151,9 +154,9 @@ else {
 				$tmp = $g->Wplayer;
 				$g->Wplayer = $g->Bplayer;
 				$g->Bplayer = $tmp;
-				$col = 1 - $col;				
+				$col = 1 - $col;
 			}
-			
+
 			$g->update_players();
 
 		} // end of xisting game code
@@ -169,23 +172,18 @@ else {
 				}
 				$g->create_game();
 		}
-		
-		// Swap colours in case not defined	
+
+		// Swap colours in case not defined
 		$col = 1 - $col;
 	}	// End of loop over games
 } // End of else for existing games
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Match Allocation Result";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+lg_html_header("Match Allocation Result");
+lg_html_nav();
+print <<<EOT
 <h1>Match Allocation Result</h1>
-<?php
+
+EOT;
 
 // If all that completes allocation, then tell the good news
 
@@ -219,10 +217,11 @@ EOT;
 <td>{$g->Bplayer->display_online()}</td>
 <td>{$g->Bteam->display_name()}</td>
 </tr>
+
 EOT;
 	}
 	mail_allocated($mtch, $pars);
-	$n = new News($userid, "Match now allocated between {$mtch->Hteam->Name} and {$mtch->Ateam->Name} in Division {$mtch->Division}", false, $mtch->showmatch());
+	$n = new News($Connection->userid, "Match now allocated between {$mtch->Hteam->Name} and {$mtch->Ateam->Name} in Division {$mtch->Division}", false, $mtch->showmatch());
 	$n->addnews();
 }
 else  {
@@ -231,11 +230,12 @@ else  {
 Thank you for submitting the team for {$Myteam->display_name()}.
 We haven't had the team for {$Histeam->display_name()} yet so you can
 change it until we've received it.</p>
+
 EOT;
 }
-?>
+print <<<EOT
 <p>Click <a href="matches.php">here</a> to edit some other match.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

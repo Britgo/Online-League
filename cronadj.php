@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,28 +21,22 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Reminders etc";
-include 'php/head.php';
-?>
-<body>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+$Connection = opendatabase(true);
+
+lg_html_header("Reminders etc");
+lg_html_nav();
+print <<<EOT
 <h1>Cron reminders</h1>
-<p>
-Use the following form to turn on or off the paid/unpaid reminders, the reminders about
-games not being played.
-</p>
+<p>Use the following form to turn on or off the paid/unpaid reminders, the reminders about
+games not being played.</p>
 <form action="cronadj2.php" method="post" enctype="application/x-www-form-urlencoded" name='cform'>
-<?php
+
+EOT;
 $nomatchck = "";
 $nopaychck = "";
 $norsschck = "";
@@ -49,12 +50,9 @@ print <<<EOT
 <p><input type="checkbox" name="nomatchrem"$nomatchck />Set to turn off match reminder script.</p>
 <p><input type="checkbox" name="nopay"$nopaychck />Set to turn off pay notifications script.</p>
 <p><input type="checkbox" name="norss"$norsschck />Set to turn off RSS feed generation.</p>
-
-EOT;
-?>
 <p><input type="submit" name="Sub" value="Save changes"> when ready.</p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

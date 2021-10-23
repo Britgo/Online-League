@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -17,8 +24,9 @@
 // Version of loadkgs for where we "believe" the existing match date
 // and just want to get the SGF file for an existing game.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -30,53 +38,28 @@ include 'php/matchdate.php';
 include 'php/game.php';
 include 'php/kgsfetchsgf.php';
 
+$Connection = opendatabase(true);
+
 $g = new Game();
 try  {
 	$g->fromget();
 	$g->fetchdets();
 }
 catch (GameException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
 
 try  {
 	$g->set_sgf(kgsfetchsgf($g));
 }
 catch (GameException $e)  {
-	$msg = htmlspecialchars($e->getMessage());
-	$Title = "Could not find game";
-	print "<html>\n";
-	include 'php/head.php';
-	print <<<EOT
-<body>
-<h1>Game score add failed</h1>
-<p>I could not find the game result because: $msg.</p>
-<p>Just start again from the top by <a href="index.php" title="Go back to home page">clicking here</a>.</p>
-</body>		
-</html>
-EOT;
-	exit(0);
+	game_not_found($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Add Game SGF Complete";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
-<h1>Add Game SGF complete</h1>
-<p>
-Finished adding SGF for Game between
-<?php
+lg_html_header("Add game SGF complete");
+lg_html_nav();
 print <<<EOT
+<h1>Add Game SGF complete</h1>
+<p>Finished adding SGF for Game between
 <b>{$g->Wplayer->display_name()}</b>
 ({$g->Wplayer->display_rank()}) of
 {$g->Wteam->display_name()} as White and
@@ -85,9 +68,7 @@ print <<<EOT
 {$g->Bteam->display_name()} as Black
 on {$g->date_played()}.
 </p>
+
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -22,6 +30,8 @@ include 'php/player.php';
 include 'php/game.php';
 include 'php/matchdate.php';
 include 'php/team.php';
+
+$Connection = opendatabase();
 try {
 	$player = new Player();
 	$player->fromget();
@@ -29,28 +39,17 @@ try {
 	$player->fetchclub();
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Player Games";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Player Results</h1>
-<?php
+
+lg_html_header("Player Games");
+lg_html_nav();
 $Name = $player->display_name(false);
+
 print <<<EOT
-<p>
-These are recorded games on the league for $Name, currently
-{$player->display_rank()}, of {$player->Club->display_name()}.
-</p>
+<h1>Player Results</h1>
+<p>These are recorded games on the league for $Name, currently
+{$player->display_rank()}, of {$player->Club->display_name()}.</p>
 
 EOT;
 $pu = $player->display_userid(0);
@@ -74,8 +73,8 @@ if (strlen($pnotes) != 0)
 
 EOT;
 
-$ret = mysql_query("select teamname from teammemb where {$player->queryof('tm')} order by teamname");
-if  ($ret && mysql_num_rows($ret) > 0)  {
+$ret = $Connection->query("SELECT teamname FROM teammemb WHERE {$player->queryof('tm')} ORDER BY teamname");
+if  ($ret && $ret->num_rows > 0)  {
 	print <<<EOT
 <h2>Team Membership</h2>
 
@@ -83,7 +82,7 @@ if  ($ret && mysql_num_rows($ret) > 0)  {
 <table class="resultsb">
 
 EOT;
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$team = new Team($row[0]);
 		$team->fetchdets();
 		print "<tr><td>{$team->display_name(true)}</td></tr>\n";
@@ -123,9 +122,7 @@ EOT;
 			$dg = $player->drawn_games(true);
 			$lg = $player->lost_games(true);
 			print <<<EOT
-<p>
-Record is Played: $current_games Won: $wg Drawn: $dg Lost: $lg.
-</p>
+<p>Record is Played: $current_games Won: $wg Drawn: $dg Lost: $lg.</p>
 <img src="php/piewdl.php?w=$wg&d=$dg&l=$lg">
 <br />
 
@@ -135,14 +132,12 @@ EOT;
 <h2>Overall record</h2>
 
 EOT;
-	}	
+	}
 	$wg = $player->won_games();
 	$dg = $player->drawn_games();
 	$lg = $player->lost_games();
 	print <<<EOT
-<p>
-Overall record is Played: $total_games Won: $wg Drawn: $dg Lost: $lg.
-</p>
+<p>Overall record is Played: $total_games Won: $wg Drawn: $dg Lost: $lg.</p>
 <img src="php/piewdl.php?w=$wg&d=$dg&l=$lg">
 <br />
 <table class="resultsb">
@@ -158,11 +153,11 @@ Overall record is Played: $total_games Won: $wg Drawn: $dg Lost: $lg.
 
 EOT;
 	// Fetch game record
-	
-	$ret = mysql_query("select ind from game where result!='N' and (({$player->queryof('w')}) or ({$player->queryof('b')})) order by matchdate");
-	if ($ret && mysql_num_rows($ret))
 
-		while ($row = mysql_fetch_assoc($ret)) {
+	$ret = $Connection->query("SELECT ind FROM game WHERE result!='N' AND (({$player->queryof('w')}) OR ({$player->queryof('b')})) ORDER BY matchdate");
+	if ($ret && $ret->num_rows)
+
+		while ($row = $ret->fetch_assoc()) {
 			try  {
 				$g = new Game($row["ind"]);
 				$g->fetchdets();
@@ -172,9 +167,9 @@ EOT;
 				continue;
 			}
 			print "<tr><td>{$g->date_played()}</td>\n";
-			
+
 			// If player is white extract right fields
-			
+
 			if ($g->Wplayer->is_same($player))  {
 				print <<<EOT
 <td>{$g->Wteam->display_name()}</td>
@@ -189,12 +184,12 @@ EOT;
 				case 'J': $r = "Jigo"; break;
 				case 'B': $r = "Lost"; break;
 				}
-				print "<td>$r</td>\n";			
+				print "<td>$r</td>\n";
 			}
 			else {
-			
+
 				// If player is black extract right fields
-				
+
 				print <<<EOT
 <td>{$g->Bteam->display_name()}</td>
 <td>Black</td>
@@ -208,14 +203,13 @@ EOT;
 				case 'J': $r = "Jigo"; break;
 				case 'B': $r = "Won"; break;
 				}
-				print "<td>$r</td>\n";			
+				print "<td>$r</td>\n";
 			}
 			print "<td>{$g->display_result()}</td></tr>\n";
 		}  // End of while
 	print <<<EOT
 	</table>
-	<p>You can click on the name of each opponent to see the record for that opponent.
-	</p>
+	<p>You can click on the name of each opponent to see the record for that opponent.	</p>
 
 EOT;
 }	// End if "if any games played" case
@@ -243,13 +237,13 @@ EOT;
 	}
 	else
 		print <<<EOT
-<p>Sorry, we don't have any contact information for $Name.</p>
+<p>Sorry, we do not have any contact information for $Name.</p>
 
 EOT;
 }
-?>
+print <<<EOT
 <p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

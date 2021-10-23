@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,32 +20,29 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
+
+$Connection = opendatabase(true);
 try {
 	$team = new Team();
 	$team->fromget();
 	$team->fetchdets();
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
+
 $Title = "Update Team {$team->display_name()}";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+
+lg_html_header($Title);
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -55,21 +58,20 @@ function formvalid()
 		return true;
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+
+EOT;
+lg_html_nav();
 print <<<EOT
-<h1>Update Team {$team->display_name()}</h1>
+<h1>$Title</h1>
 <p>Please update the details of the team as required using the form below.</p>
 <p>Alternatively <a href="delteam.php?{$team->urlof()}">Click here</a> to remove
 details of the team.</p>
 <p>To update the team members, <a href="updtmemb.php?{$team->urlof()}">Click here</a>.</p>
-
-EOT;
-?>
 <p>You can enter a new team here by adjusting the fields appropriately and
 pressing the "Add team" button.</p>
-<?php
+
+EOT;
+
 if ($team->Playing)
 	print "<p>The team is marked as playing in this season.\n";
 else
@@ -87,25 +89,18 @@ print <<<EOT
 <a href="updpaid.php?{$team->urlof()}">Change this</a>.</p>
 <form name="teamform" action="updindteam2.php" method="post" enctype="application/x-www-form-urlencoded" onsubmit="javascript:return formvalid();">
 {$team->save_hidden()}
-<p>
-Team Name:
-<input type="text" name="teamname" value="{$team->display_name()}" size=20>
-Full Name:
-<input type="text" name="teamdescr" value="{$team->display_description()}" size=40>
-</p><p>
-Division:
+<p>Team Name:<input type="text" name="teamname" value="{$team->display_name()}" size=20>
+Full Name:<input type="text" name="teamdescr" value="{$team->display_description()}" size=40></p>
+<p>Division:
 EOT;
 $team->divopt();
 print "Captain:";
 $team->captainopt();
-?>
+print <<<EOT
 </p>
-<p>
-<input type="submit" name="subm" value="Add Team">
-<input type="submit" name="subm" value="Update Team">
-</p>
+<p><input type="submit" name="subm" value="Add Team"><input type="submit" name="subm" value="Update Team"></p>
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2013 John Collins
+//   Copyright 2013-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -25,29 +33,25 @@ include 'php/matchdate.php';
 include 'php/match.php';
 include 'php/team.php';
 
+$Connection = opendatabase(true);
+
 // Get who I am
 
 try {
-        $player = new Player();
-        $player->fromid($userid);
+	$player = new Player();
+   $player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-        $mess = $e->getMessage();
-        include 'php/wrongentry.php';
-        exit(0);
+	wrongentry($e->getMessage());
 }
 
 // Get message
 
 $messid = $_GET['msgi'];
 
-$ret = mysql_query("delete from message where ind=$messid");
-if  (!$ret || mysql_affected_rows() == 0)  {
-	$mess = "Could not delete message $messid";
-	include 'php/wrongentry.php';
-	exit(0);
-}
+$ret = $Connection->query("DELETE FROM message WHERE ind=$messid");
+if  (!$ret || $Connection->affected_rows == 0)
+	wrongentry("Could not delete message $messid");
 $s = $_SERVER['SERVER_NAME'];
 header("Location: http://$s/messages.php");
 ?>
-

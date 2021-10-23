@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,18 +20,14 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Send a message to team captains";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
+
+$Connection = opendatabase(true);
+lg_html_header("Send a message to team captains");
+print <<<EOT
 <script language="javascript">
 function formvalid()
 {
@@ -41,10 +43,10 @@ function formvalid()
 		return true;
 }
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-?>
+
+EOT;
+lg_html_nav();
+print <<<EOT
 <h1>Send a message to team captains</h1>
 <p>Please use the form below to compose a message to all team captains.</p>
 <p>If you are expecting replies please put your email address in the
@@ -62,7 +64,7 @@ include 'php/nav.php';
 <br clear="all">
 <input type="submit" name="submit" value="Submit message">
 </form>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

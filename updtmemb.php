@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,38 +20,36 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
+
+$Connection = opendatabase(true);
+
 try {
 	$team = new Team();
 	$team->fromget();
 	$team->fetchdets();
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
+
 $Playerlist = list_players("club,rank desc,last,first");
 $Elist = $team->list_members();
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
 $Title = "Update Team Members for {$team->display_name()}";
-include 'php/head.php';
+lg_html_header($Title);
 print <<<EOT
-<body onload="javascript:loadtab()" onunload="javascript:killwind()">
-<script language="javascript" src="webfn.js"></script>
 <script language="javascript">
 var playerlist = new Array();
 var currteam = new Array();
+
 EOT;
 foreach ($Playerlist as $player) {
 	$player->fetchdets();
@@ -68,8 +72,6 @@ EOT;
 }
 print <<<EOT
 var teamurl = "{$team->urlof()}";
-EOT;
-?>
 var changes = 0;
 var createwind = null;
 
@@ -150,40 +152,26 @@ function savemembs() {
 	}
 	var arglist = args.join("&");
 	var newloc = "updmembs.php?" + arglist;
-	document.location = newloc; 
+	document.location = newloc;
 }
 
 </script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
-print <<<EOT
-<h1>Update Team Members for {$team->display_name()}</h1>
 
 EOT;
-?>
-<p>
-This is the current team. To add a player to the team
+lg_html_nav();
+print <<<EOT
+<h1>$Title</h1>
+<p>This is the current team. To add a player to the team
 <a href="javascript:addmembs()">click here</a>.
-To remove a player click
-del against the player.
-</p>
+To remove a player click del against the player.</p>
 <table class="updtmemb">
-<thead>
-<tr>
-<th>Name</th>
-<th>Rank</th>
-<th>Club</th>
-<th>Del</th>
-</tr>
-</thead>
-<tbody id="membbody">
-</tbody>
+<thead><tr><th>Name</th><th>Rank</th><th>Club</th><th>Del</th></tr></thead>
+<tbody id="membbody"></tbody>
 </table>
 <p>When done <a href="javascript:savemembs()">click here</a> or to forget the changes
 click somewhere else.</p>
 <p id="changepara">There are no changes at present.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

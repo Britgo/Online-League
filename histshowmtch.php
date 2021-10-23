@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -28,6 +36,8 @@ include 'php/histmatch.php';
 include 'php/matchdate.php';
 include 'php/game.php';
 
+$Connection = opendatabase();
+
 $mtch = new HistMatch(null);
 try  {
 	$mtch->fromget();
@@ -37,31 +47,18 @@ try  {
 	$mtch->fetchgames();
 }
 catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);	
+	wrongentry($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Historic Match Details";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Historic Match Details</h1>
-<p>
-Match was between
-<?php
+lg_html_header("Historic Match Details");
+lg_html_nav();
 print <<<EOT
+<h1>Historic Match Details</h1>
+<p>Match was between
 {$mtch->Hteam->display_name()} ({$mtch->Hteam->display_description()})
 and
 {$mtch->Ateam->display_name()} ({$mtch->Ateam->display_description()})
 for
-{$mtch->Date->display_month()}.
-</p>
+{$mtch->Date->display_month()}.</p>
 
 EOT;
 
@@ -105,9 +102,9 @@ EOT;
 	}
 	print "</table>\n";
 }
-?>
+print <<<EOT
 <p>Click <a href="javascript:history.back()">here</a> to view some other match.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

@@ -2,10 +2,11 @@
 
 //   Copyright 2009-2017 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -20,58 +21,33 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// This include belongs to a separate system library routine in somewhere
+// like /usr/local/lib/php
+
 include 'credentials.php';
 
-try {
-	$dbcred = getcredentials('league');
-}
-catch (Credentials_error $e)  {
-	$mess = htmlspecialchars($e->getMessage());
-	print <<<EOT
-<html>
-<head>
-<title>Credentials error</title>
-<link href="/league/bgaleague-style.css" type="text/css" rel="stylesheet"></link>
-</head>
-<body>
-<h1>Credentials Error</h1>
-<p>Sorry but we were unable to fetch the credentials for the database - cannot proceed.
-Error message was: $mess.
-</p>
-<p>
-Please tell John Collins
-<a href="mailto:jmc@toad.me.uk">jmc@toad.me.uk</a> about this ASAP, and advise the context
-wherein it occurred. Thank you.</p>
-<p>Please now go to the top of the site by <a href="index.php">clicking here</a>.</p>
-</body>
-</html>
-EOT;
-	exit(0);
-}
+// First argument determines if we insist on being logged in.
+// Second argument skips trying to log in (for when we're actually logging in from web page).
 
-if  (!mysql_connect("localhost", $dbcred->Username, $dbcred->Password)  ||  !mysql_select_db($dbcred->Databasename)) {
+function  opendatabase($mustbeloggedin = false, $loginifposs = true)  {
+	try  {
+		$dbcred = getcredentials('league');
+	}
+	catch (Credentials_error $e)  {
+		report_credentials_error($e->getMessage());
+	}
 
-	$mess = mysql_error();
+	try  {
+		$conn = new Connection($dbcred->Databasename, $dbcred->Username, $dbcred->Password);
+		if ($loginifposs)  {
+			$conn->get_cookie();
+			$conn->get_login($mustbeloggedin);
+		}
+	}
+	catch (Connection_error $e)  {
+		report_connection_error($e->getMessage());
+	}
 
-print <<<EOT
-<html>
-<head>
-<title>Database error</title>
-<link href="/league/bgaleague-style.css" type="text/css" rel="stylesheet"></link>
-</head>
-<body>
-<h1>Database Error</h1>
-<p>Sorry but there has been a database error - cannot proceed.
-Database error message was $mess.
-</p>
-<p>
-Please tell John Collins
-<a href="mailto:jmc@toad.me.uk">jmc@toad.me.uk</a> about this ASAP, and advise the context
-wherein it occurred. Thank you.</p>
-<p>Please now go to the top of the site by <a href="index.php">clicking here</a>.</p>
-</body>
-</html>
-EOT;
-	exit(0);
+	return  $conn;
 }
 ?>

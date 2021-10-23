@@ -1,6 +1,12 @@
 <?php
 //   Copyright 2011-7 John Collins
 
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
 //   the Free Software Foundation, either version 3 of the License, or
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -27,8 +34,9 @@ include 'php/game.php';
 include 'php/params.php';
 include 'php/hcp_message.php';
 
-$asuser = $userid;
-if ($admin  &&  strlen($_GET["asuser"]) != 0)
+$Connection = opendatabase(true);
+$asuser = $Connection->userid;
+if ($Connection->admin  &&  strlen($_GET["asuser"]) != 0)
 	$asuser = $_GET["asuser"];
 
 // Get parameters to include handicap info
@@ -41,20 +49,16 @@ try {
 	$player->fromid($asuser);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-   include 'php/wrongentry.php';
-   exit(0);
+   wrongentry($e->getMessage());
 }
 
 // Get the teams this player is captain of
-	
-try {	
+
+try {
 	$captain_of = list_teams_captof($player);
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 $unalloc_matches = array();
@@ -64,9 +68,9 @@ $unplayed_matches = array();
 // Do each team in turn it's easier to code
 
 foreach ($captain_of as $team) {
-	$ret = mysql_query("select ind from lgmatch where (result='N' or result='P') and ({$team->queryof('hteam')} or {$team->queryof('ateam')}) order by matchdate");
-	if ($ret && mysql_num_rows($ret) > 0)  {
-		while ($row = mysql_fetch_array($ret))  {
+	$ret = $Connection->query("SELECT ind FROM lgmatch WHERE (result='N' OR result='P') AND ({$team->queryof('hteam')} OR {$team->queryof('ateam')}) ORDER BY matchdate");
+	if ($ret && $ret->num_rows > 0)  {
+		while ($row = $ret->fetch_array())  {
 			try {
 				$mtch = new Match($row[0]);
 				$mtch->fetchdets();
@@ -86,19 +90,12 @@ foreach ($captain_of as $team) {
 				continue;
 			}
 		}
-	}	 
+	}
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Outstanding Matches";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-include 'php/nav.php';
+
+lg_html_header("Outstanding Matches");
+lg_html_nav();
+
 if (count($captain_of) > 0 && (count($unplayed_matches) > 0 || count($unalloc_matches) > 0 || count($oppunalloc_matches) > 0)) {
 	$tnames = array();
 	foreach ($captain_of as $team) {
@@ -235,9 +232,9 @@ print <<<EOT
 
 EOT;
 $osgames = array();
-$ret = mysql_query("select ind from game where result='N' and (({$player->queryof('w')}) or ({$player->queryof('b')})) order by matchdate");
-if ($ret && mysql_num_rows($ret) > 0)  {
-	while ($row = mysql_fetch_array($ret))  {
+$ret = $Connection->query("SELECT ind FROM game WHERE result='N' AND (({$player->queryof('w')}) OR ({$player->queryof('b')})) ORDER BY matchdate");
+if ($ret && $ret->num_rows > 0)  {
+	while ($row = $ret->fetch_array())  {
 		try {
 			$g = new Game($row[0]);
 			$g->fetchdets();
@@ -299,8 +296,5 @@ EOT;
 
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

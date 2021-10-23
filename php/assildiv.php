@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -15,14 +21,14 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function ail_getrow($cols, $sel, $ord = "")  {
-	$q = "select $cols from player where ildiv!=0 and $sel";
+	$q = "SELECT $cols FROM player WHERE ildiv!=0 and $sel";
 	if (strlen($ord) != 0)
-		$q .= " order by $ord";
+		$q .= " ORDER BY $ord";
 	$q .= " limit 1";
-	$ret = mysql_query($q);
-	if  (!$ret || mysql_num_rows($ret) == 0)
+	$ret = $Connection->query($q);
+	if  (!$ret || $ret->num_rows == 0)
 		return Null;
-	return mysql_fetch_assoc($ret);
+	return $ret->fetch_assoc();
 }
 
 //  Assign an appropriate Individual League division according to the
@@ -31,33 +37,33 @@ function ail_getrow($cols, $sel, $ord = "")  {
 function assign_ildiv($rankval) {
 
 	//  If there is only one division, then just return that
-	
+
 	$maxdiv = max_ildivision();
 	if  ($maxdiv <= 1)
 		return  1;
-	
+
 	// If there is someone else with the same rank return their division
-	
+
 	if  ($row = ail_getrow("ildiv", "rank=$rankval"))
 		return $row["ildiv"];
-		
+
 	// Get the division of the next higher rank person, if none,
 	// select first division
-	
+
 	$hirow = ail_getrow("ildiv,rank", "rank>$rankval", "rank,ildiv desc");
 	if  (!$hirow)
 		return  1;
-	
+
 	// Likewise the division of the next lower rank person, if none,
 	// select bottom division
-	
+
 	$lorow = ail_getrow("ildiv,rank", "rank<$rankval", "rank desc,ildiv");
 	if  (!$lorow)
 		return  $maxdiv;
-		
+
 	// Get average rank and select higher division if better than average,
 	// otherwise lower
-	
+
 	if  ($rankval >= ($hirow["rank"] + $lorow["rank"]) / 2)
 		return  $hirow["ildiv"];
 	else

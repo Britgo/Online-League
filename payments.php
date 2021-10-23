@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -15,40 +21,41 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include 'php/checksecure.php';
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
+
+$Connection = opendatabase(true);
+
+// Need to include this after we've opened DB
+
 include 'php/listppay.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Payment of subscriptions";
-include 'php/head.php';
+
 if (count($unpaid_teams) + count($unpaid_il) <= 0)
-	print "<body>\n";
+	$onl = NULL;
 else
-   print "<body onload=\"fillinvals();\">\n";
-?>
-<script language="javascript" src="webfn.js"></script>
-<script language="javascript" src="payfuncs.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Payment of subscriptions</h1>
-<?php
-$Name = $player->display_name(false);
+	$onl = "fillinvals();";
+
+lg_html_header("Payment of subscriptions", NULL, $onl);
 print <<<EOT
-<p>Welcome, $Name, to the payments page.</p>
-<p>We manage payments via PayPal, which accepts major
-credit and debit cards (not including Amex in the UK, however)
+<script language="javascript" src="payfuncs.js"></script>
+
+EOT;
+lg_html_nav();
+print <<<EOT
+<h1>Payment of subscriptions</h1>
+<p>Welcome, {$player->display_name(false)}, to the payments page.</p>
+<p>We manage payments via PayPal, which accepts major credit and debit cards (not including Amex in the UK, however)
 as well as payments via a PayPal account.</p>
 <p>You <strong>do not</strong> have to have a PayPal account to use this.</p>
 <p>You do not have to use your PayPal account if you do have one, you may prefer instead to use your
-credit or debit card (and avoid an immediate debit of your bank account). To do this,
+credit or debit card (and possibly avoid an immediate debit of your bank account). To do this,
 just change the Payment Method once you are on the PayPal screen.</p>
 
 EOT;
@@ -97,8 +104,5 @@ if need be by going to the <a href="teams.php" title="Bring up list of teams">te
 
 EOT;
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

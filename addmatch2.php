@@ -1,5 +1,12 @@
 <?php
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
+
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +21,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -27,18 +35,17 @@ include 'php/matchdate.php';
 include 'php/game.php';
 
 $div = $_POST['div'];
-if (strlen($div) == 0)  {
-	$mess = "No division?";
-	include 'php/wrongentry.php';
-	exit(0);	
-}
+if (strlen($div) == 0)
+	wrongentry("No division");
+
 $hteam = $_POST['hteam'];
 $ateam = $_POST['ateam'];
 $slack = $_POST['slackd'];
-if (strlen($hteam) == 0 || strlen($ateam) == 0)  {
-	$mess = "Missing teams?";
-	include 'php/wrongentry.php';
-}
+if (strlen($hteam) == 0 || strlen($ateam) == 0)
+	wrongentry("Missing teams?");
+
+$Connection = opendatabase(true);
+
 $dat = new Matchdate();
 $dat->frompost();
 $mtch = new Match(0, $div);
@@ -53,23 +60,12 @@ try {
 	$mtch->create();
 	// That sets the match ind in $mtch which the updmatch call uses later.
 }
-catch (MatchException $e) {
-	$mess = $e->getMessage();
-	include 'php/dataerror.php';
-	exit(0);	
+catch (MatchException $e)  {
+	database_error($e->getMessage());
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Add Match division $div OK";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+
+lg_html_header("Add Match division $div OK");
+lg_html_nav();
 print <<<EOT
 <h1>Create Match division $div successful</h1>
 <p>
@@ -82,8 +78,5 @@ Successfully completed creation of Match between
 to add team members.</p>
 
 EOT;
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

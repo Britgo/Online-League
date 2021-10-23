@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2010 John Collins
+//   Copyright 2010-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -27,39 +35,23 @@ include 'php/histmatch.php';
 include 'php/matchdate.php';
 include 'php/game.php';
 
+$Connection = opendatabase();
+
 try {
 	$seas = new Season();
 	$seas->fromget();
 	$seas->fetchdets();
 }
 catch (SeasonException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
-
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Historic Matches";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
-<h1>Matches</h1>
-<?php
+lg_html_header("Historic Matches");
+lg_html_nav();
 print <<<EOT
-<p>
-This is the final matches list for
+<h1>Matches</h1>
+<p>This is the final matches list for
 <b>{$seas->display_name()}</b>, the start date for which was
-{$seas->display_start()} and the end was {$seas->display_end()}.
-</p>
-
-EOT;
-?>
-
+{$seas->display_start()} and the end was {$seas->display_end()}.</p>
 <table class="matchesd">
 <tr>
 <th>Date</th>
@@ -67,11 +59,12 @@ EOT;
 <th>Team B</th>
 <th>Score</th>
 </tr>
-<?php
-$ret = mysql_query("select ind from histmatch where {$seas->queryof()} order by divnum,matchdate,hteam,ateam");
-if ($ret && mysql_num_rows($ret) > 0)  {
+
+EOT;
+$ret = $Connection->query("SELECT ind FROM histmatch WHERE {$seas->queryof()} ORDER BY divnum,matchdate,hteam,ateam");
+if ($ret && $ret->num_rows > 0)  {
 	$lastdiv = -99;
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$ind = $row[0];
 		$mtch = new HistMatch($seas, $ind);
 		$mtch->fetchdets();
@@ -106,14 +99,13 @@ EOT;
 EOT;
 	}
 }
-else {
+else
 	print "<tr><td colspan=\"4\" align=\"center\">No matches to display</td></tr>\n";
-}
-?>
+print <<<EOT
 </table>
 <h2>Other Seasons</h2>
 <p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
-</div>
-</div>
-</body>
-</html>
+
+EOT;
+lg_html_footer();
+?>

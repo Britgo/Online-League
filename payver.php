@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2012 John Collins
+//   Copyright 2012-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -15,8 +21,9 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include 'php/checksecure.php';
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,6 +31,7 @@ include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
 
+$Connection = opendatabase(true);
 // This is the module called when all goes OK with the initial transaction, we need to get details of the
 // transaction from Paypal and set up to call the final confirmation.
 
@@ -33,50 +41,38 @@ function apiapp(&$arr, $k, $v) {
 
 try {
 	$player = new Player();
-	$player->fromid($userid);
+	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 $ind = $_GET["ind"];
 $tok = $_GET["token"];
 if (strlen($ind) == 0 || strlen($tok) == 0)  {
-	$mess = "No indicator given ind=$ind tok=$tok???";
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry("No indicator given ind=$ind tok=$tok???");
 }
 
-$ret = mysql_query("select league,descr1,descr2,token,amount from pendpay where ind=$ind");
+$ret = $Connection->query("SELECT league,descr1,descr2,token,amount FROM pendpay WHERE ind=$ind");
 if (!$ret)  {
-	$mess = mysql_error();
-	include 'php/dataerror.php';
-	exit(0);
+   database_error($Connection->error);
 }
-if (mysql_num_rows($ret) == 0)  {
-	$mess = "Cannot find pending payment, ind=$ind";
-	include 'php/wrongentry.php';
-	exit(0);
+if ($ret->num_rows == 0)  {
+   wrongentry("Cannot find pending payment, ind=$ind");
 }
-$row = mysql_fetch_assoc($ret);
+$row = $ret->fetch_assoc();
 
 // Verify that the token matches up (change this later not to display them)
 
 $rtok = $row["token"];
 $amount = $row["amount"];
 if ($tok != $rtok) {
-	$mess = "Mismatch tokens r=$tok, d=$rtok";
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry("Mismatch tokens r=$tok, d=$rtok");
 }
 
 switch  ($row["league"])  {
 default:
-	$mess = "Do not know how to do {$row['league']} payments yet";
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry("Do not know how to do {$row['league']} payments yet");
 case  'T':
 	$type = 'T';
 	$teamname = $row["descr1"];
@@ -92,37 +88,29 @@ try {
 	if ($type == 'T')  {
 		$team = new Team($teamname);
 		$team->fetchdets();
-		
+
 		// Error if this team has paid
-		
+
 		if ($team->Paid)  {
-			$mess = "Team $teamname have already paid??";
-			include 'php/wrongentry.php';
-			exit(0);
+   wrongentry("Team $teamname have already paid??");
 		}
 	}
 	else  {
 		$pplayer = new Player($first, $last);
 		$pplayer->fetchdets();
-		
+
 		// Error if this player has paid
-		
+
 		if ($pplayer->ILpaid)  {
-			$mess = "$first $last is already paid??";
-			include 'php/wrongentry.php';
-			exit(0);
+   wrongentry("$first $last is already paid??");
 		}
 	}
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'php/wrongentry.php';
-	exit(0);
+   wrongentry($e->getMessage());
 }
 
 // OK now we are ready to do the PayPal stuff stage 3.
@@ -169,38 +157,32 @@ foreach ($responses as $r) {
 
 $ret = strtoupper($parsedresp["ACK"]);
 if ($ret != 'SUCCESS' && $ret != "SUCCESSWITHWARNING")  {
-	$mess = "API error in Set Express Checkout";
-	mysql_query("delete from pendpay where ind=$ind");
-	include 'php/probpay.php';
-	exit(0);
+	$Connection->query("DELETE FROM pendpay WHERE ind=$ind");
+	prob_pay("API error in Set Express Checkout", $parsedresp);
 }
+
 $payerid = $parsedresp["PAYERID"];
 $qpayerid = htmlspecialchars($payerid);
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Please confirm payment";
-include 'php/head.php';
-?>
-<body>
-<?php include 'php/nav.php'; ?>
+lg_html_header("Please confirm payment");
+lg_html_nav();
+print <<<EOT
 <h1>Please Confirm Payment OK</h1>
-<?php
-if ($type == 'T') {
+
+EOT;
+if ($type == 'T')
 	print <<<EOT
 <p>About to record payment of &pound;$amount on behalf of {$team->display_name()}.</p>
 
 EOT;
-}
-else {
+else
 	print <<<EOT
 <p>About to record payment of &pound;$amount on behalf of {$pplayer->display_name()}.</p>
 
 EOT;
-}
+
 print <<<EOT
 <p>The payment has been entered by {$player->display_name(false)}, PayPal account details are for
+
 EOT;
 print " ";
 print htmlspecialchars($parsedresp["FIRSTNAME"] . " " . $parsedresp["LASTNAME"]);
@@ -215,11 +197,8 @@ print <<<EOT
 <p>Choose option <input type="submit" name="Confirm" value="Confirm payment" /> or
 <a href="http://league.britgo.org/paycanc.php?ind=$ind">Cancel the payment</a>.</p>
 </form>
+</table>
 
 EOT;
+lg_html_footer();
 ?>
-</table>
-</div>
-</div>
-</body>
-</html>

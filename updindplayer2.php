@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,8 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
-include 'php/checklogged.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,25 +31,21 @@ include 'php/genpasswd.php';
 include 'php/newaccemail.php';
 include 'php/assildiv.php';
 
+$Connection = opendatabase(true);
+
 function checkclash($column, $value) {
 	if (strlen($value) == 0)
 		return;
-	$qvalue = mysql_real_escape_string($value);
-	$ret = mysql_query("select $column from player where $column='$qvalue'");
-	if ($ret && mysql_num_rows($ret) != 0)  {
-		include 'php/nameclash.php';
-		exit(0);
-	}
+	$qvalue = $Connection->real_escape_string($value);
+	$ret = $Connection->query("SELECT $column FROM player WHERE $column='$qvalue'");
+	if ($ret && $ret->num_rows != 0)
+		clash_item($column, htmlspecialchars($value));
 }
 
 function checkname($newplayer) {
-	$ret = mysql_query("select first,last from player where {$newplayer->queryof()}");
-	if ($ret && mysql_num_rows($ret) != 0)  {
-		$column = "name";
-		$value = $newplayer->display_name(false);
-		include 'php/nameclash.php';
-		exit(0);
-	}
+	$ret = $Connection->query("SELECT first,last FROM player WHERE {$newplayer->queryof()}");
+	if ($ret && $ret->num_rows != 0)
+		clash_item("name", $newplayer->display_name(false));
 }
 
 $action = substr($_POST["subm"], 0, 1);
@@ -65,15 +68,14 @@ $latest = $_POST["latesttime"];
 
 switch ($action) {
 case 'A':
-	if (strlen($playname) == 0 || strlen($fuserid) == 0)  {
-		include 'php/wrongentry.php';
-		exit(0);
-	}
+	if (strlen($playname) == 0 || strlen($fuserid) == 0)
+		wrongentry();
+
 	$player = new Player($playname);
 	checkname($player);
 	checkclash('user', $fuserid);
 	checkclash('kgs', $kgs);
-	checkclash('igs', $igs); 
+	checkclash('igs', $igs);
 	$player->Rank = new Rank($rank);
 	$player->Club = new Club($club);
 	$player->Email = $email;
@@ -108,21 +110,19 @@ default:
 		$origplayer->fetchdets();
 	}
 	catch (PlayerException $e) {
-		$mess = $e->getMessage();
-		include 'php/wrongentry.php';
-		exit(0);
+   	wrongentry($e->getMessage());
 	}
-	
+
 	// Check name changes
-	
+
 	$newplayer = new Player($playname);
 	if  (!$origplayer->is_same($newplayer))  {
 		checkname($newplayer);
 		$origplayer->updatename($newplayer);
 	}
-	
+
 	// Check user kgs and igs clashes
-	
+
 	if ($origplayer->Userid != $fuserid)  {
 		checkclash('user', $fuserid);
 		$origplayer->Userid = $fuserid;
@@ -135,7 +135,7 @@ default:
 		checkclash("igs", $igs);
 		$origplayer->IGS = $igs;
 	}
-	
+
 	$origplayer->Rank = new Rank($rank);
 	$origplayer->Club = new Club($club);
 	$origplayer->Email = $email;
@@ -160,26 +160,13 @@ default:
 	$Title = "Player {$origplayer->display_name(false)} updated OK";
 	break;
 }
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Completed player update";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php
-$showadmmenu = true;
-include 'php/nav.php';
+lg_html_header($Title);
+lg_html_nav();
 print <<<EOT
 <h1>$Title</h1>
 <p>$Title.</p>
+<p>Click <a href="playupd.php">here</a> to return to the player update menu.</p>
 
 EOT;
+lg_html_footer();
 ?>
-<p>Click <a href="playupd.php">here</a> to return to the player update menu.</p>
-</div>
-</div>
-</body>
-</html>

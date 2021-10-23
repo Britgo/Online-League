@@ -1,5 +1,11 @@
 <?php
-//   Copyright 2011 John Collins
+//   Copyright 2011-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -14,7 +20,9 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/session.php';
+include 'php/html_blocks.php';
+include 'php/error_handling.php';
+include 'php/connection.php';
 include 'php/opendatabase.php';
 include 'php/club.php';
 include 'php/rank.php';
@@ -24,34 +32,32 @@ include 'php/match.php';
 include 'php/matchdate.php';
 include 'php/game.php';
 include 'php/season.php';
-?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<?php
-$Title = "Matches";
-include 'php/head.php';
-?>
-<body>
-<script language="javascript" src="webfn.js"></script>
-<?php include 'php/nav.php'; ?>
+
+$Connection = opendatabase();
+lg_html_header("Matches");
+lg_html_nav();
+print <<<EOT
 <h1>Matches</h1>
 <a name="topm"></a>
 <table class="plinits"><tr>
-<?php
+
+EOT;
 $maxdiv = max_division();
 for ($n = 1;  $n <= $maxdiv;  $n++) {
 	print <<<EOT
 <td><a href="#div$n">Div $n</a></td>
+
 EOT;
 }
-?>
+print <<<EOT
 </tr></table>
 <table class="matchesd">
-<?php
-$ret = mysql_query("select ind from lgmatch order by divnum,matchdate,hteam,ateam");
-if ($ret && mysql_num_rows($ret) > 0)  {
+
+EOT;
+$ret = $Connection->query("SELECT ind FROM lgmatch ORDER BY divnum,matchdate,hteam,ateam");
+if ($ret && $ret->num_rows > 0)  {
 	$lastdiv = -99;
-	while ($row = mysql_fetch_array($ret))  {
+	while ($row = $ret->fetch_array())  {
 		$ind = $row[0];
 		$mtch = new Match($ind);
 		$mtch->fetchdets();
@@ -67,11 +73,13 @@ if ($ret && mysql_num_rows($ret) > 0)  {
 			print <<<EOT
 <tr><th colspan="4" align="center" valign="middle"><a name="div$lastdiv"></a><a href="#topm">Division $lastdiv</a></th></tr>
 <tr><th>Date</th><th>Team A</th><th>Team B</th><th>Status</th></tr>
+
 EOT;
 		}
 		print <<<EOT
 <tr>
 <td>{$mtch->Date->display_month()}</td>
+
 EOT;
 		$ht = $mtch->Hteam->display_name();
 		$at = $mtch->Ateam->display_name();
@@ -103,7 +111,7 @@ EOT;
 			}
 			print "<td>$href$ht$hndref</td><td>$aref$at$andref</td>\n";
 		}
-		if ($mtch->Result == 'H' || $mtch->Result == 'A' || $mtch->Result == 'D')  {		
+		if ($mtch->Result == 'H' || $mtch->Result == 'A' || $mtch->Result == 'D')  {
 			print "<td>Played ({$mtch->summ_score()})</td>";
 		}
 		elseif ($mtch->is_allocated())  {
@@ -121,19 +129,19 @@ EOT;
 else {
 	print "<tr><td colspan=\"3\" align=\"center\">No matches yet for the current season</td></tr>\n";
 }
-?>
+print <<<EOT
 </table>
 <h2>Previous Seasons</h2>
 <a name="prev"></a>
-<?php
+
+EOT;
+
 $seasons = list_seasons();
 if (count($seasons) == 0) {
 	print <<<EOT
 <p>There are currently no past seasons to display.
-Please come back soon!
-</p>
-<p>Please <a href="javascript:history.back()">click here</a> to go back.
-</p>
+Please come back soon!</p>
+<p>Please <a href="javascript:history.back()">click here</a> to go back.</p>
 
 EOT;
 }
@@ -164,8 +172,5 @@ EOT;
 	}
 	print "</table>\n";
 }
+lg_html_footer();
 ?>
-</div>
-</div>
-</body>
-</html>

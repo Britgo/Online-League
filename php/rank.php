@@ -1,6 +1,12 @@
 <?php
 
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -17,13 +23,13 @@
 
 class Rank {
 	public $Rankvalue;
-	
+
 	public function __construct($r=0) {
 		$this->Rankvalue = $r;
 	}
 
 	//  Turn rank value into display string
-		
+
 	public function display() {
 		if ($this->Rankvalue >= 0) {
 			$r = $this->Rankvalue + 1;
@@ -36,18 +42,18 @@ class Rank {
 	}
 
 	// This is for anchors based on rank - add 30
-		
+
 	public function anchor() {
 		$r = $this->Rankvalue + 30;
 		return "R" . $r;
 	}
 
 	// Compare functions
-		
+
 	public function equals($other) {
 		return $this->Rankvalue == $other->Rankvalue;
 	}
-	
+
 	public function notequals($other) {
 		return $this->Rankvalue != $other->Rankvalue;
 	}
@@ -55,7 +61,7 @@ class Rank {
 	//  Generate selector list for forms
 	//  NB this is a function which generates output
 	//  Don't use it embedded in a string!!!
-		
+
 	public function rankopt($suff="") {
 		print "<select name=\"rank$suff\">\n";
 		for ($r = 8;  $r >= 0;  $r--)  {

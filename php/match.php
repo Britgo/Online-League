@@ -1,10 +1,11 @@
 <?php
 //   Copyright 2009-2016 John Collins
 
-// *****************************************************************************
-// PLEASE BE CAREFUL ABOUT EDITING THIS FILE, IT IS SOURCE-CONTROLLED BY GIT!!!!
-// Your changes may be lost or break things if you don't do it correctly!
-// *****************************************************************************
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -28,7 +29,7 @@ class Match extends MatchBase {
 	public  $Hteam;		// "Home" team (class object)
 	public  $Ateam;		// "Away" team (class object)
 	public  $Slackdays;	// Days to arrange match
-	
+
 	public function __construct($in = 0, $d = 1) {
 		parent::__construct($in, $d);
 		$this->Hteam = new Team();
@@ -39,60 +40,60 @@ class Match extends MatchBase {
 	public function set_hometeam($h) {
 		$this->Hteam = new Team($h);
 	}
-	
+
 	public function set_awayteam($a) {
 		$this->Ateam = new Team($a);
 	}
 
 	// Find out match ind from a page with ?mi=nnn
-		
+
 	public function fromget() {
 		$this->Ind = intval($_GET["mi"]);
 	}
 
 	// For when we leave a hidden input in form telling
 	// the next page which prefix we're talking about
-		
+
 	public function frompost($prefix = "") {
 		$this->Ind = $_POST["${prefix}mi"];
 		if ($this->Ind == 0)
-			throw new MatchException("Null post ind field"); 
+			throw new MatchException("Null post ind field");
 	}
 
 	// For saving input in form
-	
+
 	public function save_hidden($prefix = "") {
 		$f = $this->Ind;
 		return "<input type=\"hidden\" name=\"${prefix}mi\" value=\"$f\">";
 	}
 
 	// For generation of query string with match ind in
-		
+
 	public function urlof() {
 		return "mi={$this->Ind}";
 	}
-	
+
 	// For leaving a link for news etc
-	
+
 	public function showmatch() {
 		return "showmtch.php?{$this->urlof()}";
 	}
 
 	// Fetch the rest of the stuff relating to a match
 	// apart from the teams
-	
+
 	public function fetchdets() {
 		$q = $this->queryof();
-		$ret = mysql_query("select divnum,hteam,ateam,matchdate,hwins,awins,draws,result,slackdays,defaulted from lgmatch where $q");
+		$ret = $Connection->query("SELECT divnum,hteam,ateam,matchdate,hwins,awins,draws,result,slackdays,defaulted FROM lgmatch WHERE $q");
 		if (!$ret)
 			throw new MatchException("Cannot read database for match $q");
-		if (mysql_num_rows($ret) == 0)  {
+		if ($ret->num_rows == 0)  {
 			if ($this->Ind == 0)
 				throw new MatchException("No match id");
 			else
 				throw new MatchException("Cannot find match record {$this->Ind}", true, $this->Ind);
 		}
-		$row = mysql_fetch_assoc($ret);
+		$row = $ret->fetch_assoc();
 		$this->Division = $row["divnum"];
 		$this->Hteam = new Team($row["hteam"]);
 		$this->Ateam = new Team($row["ateam"]);
@@ -104,22 +105,22 @@ class Match extends MatchBase {
 		$this->Result = $row["result"];
 		$this->Defaulted = $row["defaulted"];
 	}
-	
+
 	// Fetch the game list (not including score)
-		
+
 	public function fetchgames() {
 		$result = array();
 		if  (!$this->Defaulted)  {
-			$ret = mysql_query("select ind from game where {$this->queryof('match')} order by ind");
+			$ret = $Connection->query("SELECT ind FROM game WHERE {$this->queryof('match')} ORDER BY ind");
 			if (!$ret)
-				throw new MatchException("Game read fail " . mysql_error());
+				throw new MatchException("Game read fail " . $Connection->error);
 
 			try  {
-				while ($row = mysql_fetch_array($ret))  {
+				while ($row = $ret->fetch_array())  {
 					$g = new Game($row[0], $this->Ind, $this->Division);
 					$g->fetchdets();
 					array_push($result, $g);
-				}	
+				}
 			}
 			catch (GameException $e) {
 				throw new MatchException($e->getMessage());
@@ -127,45 +128,45 @@ class Match extends MatchBase {
 		}
 		$this->Games = $result;
 	}
-	
+
 	public function create() {
 		$qhome = $this->Hteam->queryname();
 		$qaway = $this->Ateam->queryname();
 		$qdate = $this->Date->queryof();
-		$qres = mysql_real_escape_string($this->Result);
-		$ret = mysql_query("insert into lgmatch (divnum,hteam,ateam,matchdate,hwins,awins,draws,result,slackdays) values ({$this->Division},'$qhome','$qaway','$qdate',{$this->Hwins},{$this->Awins},{$this->Draws},'$qres',{$this->Slackdays})");
+		$qres = $Connection->real_escape_string($this->Result);
+		$ret = $Connection->query("INSERT INTO lgmatch (divnum,hteam,ateam,matchdate,hwins,awins,draws,result,slackdays) VALUES ({$this->Division},'$qhome','$qaway','$qdate',{$this->Hwins},{$this->Awins},{$this->Draws},'$qres',{$this->Slackdays})");
 		if (!$ret)
-			throw new MatchException(mysql_error());
-		$ret = mysql_query("select last_insert_id()");
-		if (!$ret || mysql_num_rows($ret) == 0)
+			throw new MatchException($Connection->error);
+		$ret = $Connection->query("SELECT last_insert_id()");
+		if (!$ret || $ret->num_rows == 0)
 			throw new MatchException("Cannot locate match record id");
-		$row = mysql_fetch_array($ret);
+		$row = $ret->fetch_array();
 		$this->Ind = $row[0];
 	}
-	
+
 	public function dateupdate() {
 		$qdate = $this->Date->queryof();
-		$ret = mysql_query("update lgmatch set matchdate='$qdate',slackdays={$this->Slackdays} where {$this->queryof()}");
+		$ret = $Connection->query("UPDATE lgmatch SET matchdate='$qdate',slackdays={$this->Slackdays} WHERE {$this->queryof()}");
 		if (!$ret)
-			throw new MatchException(mysql_error());
-		mysql_query("update game set matchdate='$qdate' where {$this->queryof('match')} and result='N'");
+			throw new MatchException($Connection->error);
+		$Connection->query("UPDATE game SET matchdate='$qdate' WHERE {$this->queryof('match')} and result='N'");
 		foreach ($this->Games as $g) {
 			if ($g->Result == 'N')
 				$g->Date = $this->Date;
 		}
 	}
-	
+
 	public function delmatch() {
-		$ret = mysql_query("delete from lgmatch where {$this->queryof()}");
+		$ret = $Connection->query("DELETE FROM lgmatch WHERE {$this->queryof()}");
 		if (!$ret)
-			throw new MatchException(mysql_error());
+			throw new MatchException($Connection->error);
 		//  We currently don't allow deletion of played games so this shouldn't
 		//  lose anything
-		mysql_query("delete from game where {$this->queryof('match')}");
+		$Connection->query("DELETE FROM game WHERE {$this->queryof('match')}");
 	}
-	
+
 	// Adjust result of match for incoming score
-	
+
 	public function updscore() {
 		$tot = $this->Hwins + $this->Awins + $this->Draws;
 		$delmsgs = false;
@@ -185,11 +186,11 @@ class Match extends MatchBase {
 			$this->Result = 'H';
 			$delmsgs = true;
 		}
-		mysql_query("update lgmatch set result='{$this->Result}',hwins={$this->Hwins},awins={$this->Awins},draws={$this->Draws} where {$this->queryof()}");
+		$Connection->query("UPDATE lgmatch SET result='{$this->Result}',hwins={$this->Hwins},awins={$this->Awins},draws={$this->Draws} WHERE {$this->queryof()}");
 		if ($delmsgs)
-			mysql_query("delete from message where {$this->queryof('match')}");
+			$Connection->query("DELETE FROM message WHERE {$this->queryof('match')}");
 	}
-	
+
 	public function set_defaulted($hora) {
 		switch  ($hora)  {
 		default:
@@ -208,12 +209,12 @@ class Match extends MatchBase {
 			break;
 		}
 		$this->Defaulted = true;
-		mysql_query("update lgmatch set defaulted=1,result='{$this->Result}',hwins={$this->Hwins},awins={$this->Awins},draws={$this->Draws} where {$this->queryof()}");
-		mysql_query("delete from game where {$this->queryof('match')}");
-	}	
+		$Connection->query("UPDATE lgmatch SET defaulted=1,result='{$this->Result}',hwins={$this->Hwins},awins={$this->Awins},draws={$this->Draws} WHERE {$this->queryof()}");
+		$Connection->query("DELETE FROM game WHERE {$this->queryof('match')}");
+	}
 
 	// Push out a selection option for the number of spare days
-			
+
 	public function slackdopt()
 	{
 		print "<select name=\"slackd\">\n";
@@ -225,10 +226,10 @@ class Match extends MatchBase {
 		}
 		print "</select>\n";
 	}
-	
+
 	// Is given guy a captain for this match
 	// Return N if not H for "Home" A for "away"
-	
+
 	public function is_captain($name) {
 		try  {
 			$possp = new Player($name);
@@ -250,10 +251,10 @@ class Match extends MatchBase {
 // Return the number of matches for a division
 
 function count_matches_for($divnum) {
-	$ret = mysql_query("select count(*) from lgmatch where divnum=$divnum");
-	if (!$ret || mysql_num_rows($ret) == 0)
+	$ret = $Connection->query("SELECT COUNT(*) FROM lgmatch WHERE divnum=$divnum");
+	if (!$ret || $ret->num_rows == 0)
 		return  0;
-	$row = mysql_fetch_array($ret);
+	$row = $ret->fetch_array();
 	return $row[0];
 }
 

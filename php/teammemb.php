@@ -1,6 +1,12 @@
 <?php
 
-//   Copyright 2009 John Collins
+//   Copyright 2009-2021 John Collins
+
+// *********************************************************************
+// Please do not edit the live file directly as it will break the "Git"
+// mechanism to update the live files automatically when a new version
+// is pushed. Thanks!
+// *********************************************************************
 
 //   This program is free software: you can redistribute it and/or modify
 //   it under the terms of the GNU General Public License as published by
@@ -19,20 +25,20 @@ class TeamMembException extends Exception {}
 
 class TeamMemb extends Player  {
 	public $Team;		// A team object
-	
+
 	public function __construct($t, $f = "", $l = "") {
 		parent::__construct($f, $l);
 		$this->Team = $t;
 	}
-	
+
 	public function create() {
-		if (!mysql_query("insert into teammemb set tmfirst='{$this->queryfirst()}',tmlast='{$this->querylast()}',{$this->Team->queryof('teamname')},rank={$this->Rank->Rankvalue}"))
-			throw new TeamMembException(mysql_error());
+		if (!$Connection->query("INSERT INTO teammemb SET tmfirst='{$this->queryfirst()}',tmlast='{$this->querylast()}',{$this->Team->queryof('teamname')},rank={$this->Rank->Rankvalue}"))
+			throw new TeamMembException($Connection->error);
 	}
 }
 
 function del_team_membs($team) {
-	if  (!mysql_query("delete from teammemb where {$team->queryof('teamname')}"))
-		throw new TeamMembException(mysql_error());
+	if  (!$Connection->query("DELETE FROM teammemb WHERE {$team->queryof('teamname')}"))
+		throw new TeamMembException($Connection->error);
 }
 ?>
