@@ -31,7 +31,7 @@ function  lg_html_header($title, $bodyclass = NULL, $onload = NULL, $onunload = 
 <title>$title</title>
 <meta name="generator" content="Bluefish 2.2.11" >
 <meta name="author" content="John M Collins" >
-<meta name="date" content="2021-10-24T11:04:09+0100" >
+<meta name="date" content="2021-10-24T11:06:59+0100" >
 <meta name="copyright" content="John Collins GPLv3">
 <meta name="keywords" content="Go,British Go Association,League">
 <meta name="description" content="League for BGA web pages">
@@ -247,12 +247,6 @@ function lg_html_footer($hasfoot = false)  {
 <p class="note">
 This website was designed, authored and programmed by John Collins</p>
 <p class="note">Copyright &copy; John Collins 2009-$dat. Licensed under <a href="http://www.gnu.org/licenses/">GPL v3</a>.</p>
-
-// *********************************************************************
-// Please do not edit the live file directly as it will break the "Git"
-// mechanism to update the live files automatically when a new version
-// is pushed. Thanks!
-// *********************************************************************
 
 EOT;
 	}
