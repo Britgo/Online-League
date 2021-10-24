@@ -106,6 +106,7 @@ class Player  {
 	// Use me to get details starting from userid
 
 	public function fromid($id) {
+		global $Connection;
 		$qid = $Connection->real_escape_string($id);
 		$ret = $Connection->query("SELECT first,last,rank,club,email,okmail,trivia,phone,kgs,igs,admin,bgamemb,ildiv,ilpaid,notes,latestcall FROM player WHERE user='$qid'");
 		if (!$ret || $ret->num_rows == 0)
@@ -133,6 +134,7 @@ class Player  {
 	// Generate a MySQL query from a player object
 
 	public function queryof($prefix = "") {
+		global $Connection;
 		$qf = $Connection->real_escape_string($this->First);
 		$ql = $Connection->real_escape_string($this->Last);
 		return "${prefix}first='$qf' AND ${prefix}last='$ql'";
@@ -141,12 +143,14 @@ class Player  {
 	// For when we just want the MySQL rendering of the First name
 
 	public function queryfirst() {
+		global $Connection;
 		return $Connection->real_escape_string($this->First);
 	}
 
 	// Ditto last name
 
 	public function querylast() {
+		global $Connection;
 		return $Connection->real_escape_string($this->Last);
 	}
 
@@ -178,6 +182,7 @@ class Player  {
 	// Get the rest of the details having got the name
 
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT rank,club,email,okmail,trivia,phone,kgs,igs,admin,user,bgamemb,ildiv,ilpaid,notes,latestcall FROM player WHERE $q");
 		if (!$ret)
@@ -320,6 +325,7 @@ class Player  {
 	// Get password
 
 	public function get_passwd() {
+		global $Connection;
 		$ret = $Connection->query("SELECT password FROM player WHERE{$this->queryof()}");
 		if (!$ret || $ret->num_rows == 0)
 			return  "";
@@ -336,6 +342,7 @@ class Player  {
 	// Set password
 
 	public function set_passwd($pw)  {
+		global $Connection;		
 		$qpw = $Connection->real_escape_string($pw);
 		$Connection->query("UPDATE player SET password='$qpw' WHERE{$this->queryof()}");
 	}
@@ -439,6 +446,7 @@ class Player  {
 	// Add player record to database
 
 	public function create() {
+		global $Connection;
 		$qfirst = $Connection->real_escape_string($this->First);
 		$qlast = $Connection->real_escape_string($this->Last);
 		$qclub = $Connection->real_escape_string($this->Club->Code);
@@ -460,6 +468,7 @@ class Player  {
 	// Update player record of name
 
 	public function updatename($newp) {
+		global $Connection;
 		$qfirst = $Connection->real_escape_string($newp->First);
 		$qlast = $Connection->real_escape_string($newp->Last);
 		$Connection->query("UPDATE player SET first='$qfirst',last='$qlast' WHERE {$this->queryof()}");
@@ -482,6 +491,7 @@ class Player  {
 	// Update player record
 
 	public function update() {
+		global $Connection;
 		$qclub = $Connection->real_escape_string($this->Club->Code);
 		$quser = $Connection->real_escape_string($this->Userid);
 		$qadmin = $Connection->real_escape_string($this->Admin);
@@ -507,12 +517,14 @@ class Player  {
 	//  Paid relates to individual league
 
 	public function setpaid($v = true) {
+		global $Connection;
 		$vv = $v? 1: 0;
 		$Connection->query("UPDATE player SET ilpaid=$vv WHERE {$this->queryof()}");
 		$this->ILpaid = $v;
 	}
 
 	public function updrank($r) {
+		global $Connection;
 		$this->Rank->Rankvalue = $r;
 		$Connection->query("UPDATE player SET rank=$r WHERE {$this->queryof()}");
 		// Fix rank in teams that this player is a member of
@@ -525,6 +537,7 @@ class Player  {
 
 	// MySQL juggling to get Played/Won/Drawn/Lost
 	private function get_grec($query) {
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM game WHERE $query");
 		if (!$ret)
 			throw new PlayerException($Connection->error);
@@ -617,6 +630,7 @@ class Player  {
 	// Count teams this player is a member of
 
 	public function count_teams() {
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM teammemb WHERE {$this->queryof('tm')}");
 		if (!$ret || $ret->num_rows == 0)
 			return 0;
@@ -627,6 +641,7 @@ class Player  {
 	// Count historic teams this player is a member of
 
 	public function count_hist_teams() {
+		global $Connection;	
 		$ret = $Connection->query("SELECT COUNT(*) FROM histteammemb WHERE {$this->queryof('tm')}");
 		if (!$ret || $ret->num_rows == 0)
 			return 0;
@@ -635,6 +650,7 @@ class Player  {
 	}
 
 	private function getcount($seasind, $q) {
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM game WHEREleague='I' AND  seasind=$seasind and $q");
 		if (!$ret || $ret->num_rows == 0)
 			return  0;
@@ -662,6 +678,7 @@ class Player  {
 // List all players in specified order
 
 function list_players($order = "last,first,rank desc") {
+	global $Connection;
 	$ret = $Connection->query("SELECT first,last FROM player ORDER BY $order");
 	$result = array();
 	if ($ret) {
@@ -671,7 +688,8 @@ function list_players($order = "last,first,rank desc") {
 	return $result;
 }
 
-function list_admins() {
+function list_admins()   {
+	global $Connection;
 	$ret = $Connection->query("SELECT first,last FROM player WHERE admin!='N'");
 	$result = array();
 	if ($ret) {
@@ -705,6 +723,7 @@ function list_player_initials() {
 // List of all ranks people are
 
 function list_player_ranks() {
+	global $Connection;
 	$ret = $Connection->query("SELECT rank FROM player GROUP BY rank ORDER BY rank desc");
 	$result = array();
 	if  ($ret)  {
@@ -716,6 +735,7 @@ function list_player_ranks() {
 }
 
 function max_ildivision() {
+	global $Connection;
 	$result = 1;
 	$ret = $Connection->query("SELECT max(ildiv) FROM player");
 	if ($ret && $ret->num_rows > 0) {
@@ -733,6 +753,7 @@ function max_ildivision() {
 }
 
 function list_players_ildiv($div, $order = "last,first,rank desc") {
+	global $Connection;
 	$ret = $Connection->query("SELECT first,last FROM player WHERE ildiv=$div ORDER BY $order");
 	$result = array();
 	if ($ret) {
@@ -743,6 +764,7 @@ function list_players_ildiv($div, $order = "last,first,rank desc") {
 }
 
 function list_hist_players_ildiv($div, $seas) {
+	global $Connection;
 	$resultk = array();
 	$ret = $Connection->query("SELECT wfirst,wlast,bfirst,blast FROM game WHERE league='I' AND seasind={$seas->Ind} AND divnum=$div");
 	if ($ret)  {
