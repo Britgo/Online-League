@@ -20,8 +20,6 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-global $Connection;
-
 class PlayerException extends Exception {}
 
 class Player  {
@@ -688,6 +686,7 @@ function list_admins() {
 // Get a list of initials
 
 function list_player_initials() {
+	global $Connection;
 	$ret = $Connection->query("SELECT last FROM player ORDER BY last");
 	$result = array();
 	if  ($ret)  {
