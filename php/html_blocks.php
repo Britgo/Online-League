@@ -31,7 +31,7 @@ function  lg_html_header($title, $bodyclass = NULL, $onload = NULL, $onunload = 
 <title>$title</title>
 <meta name="generator" content="Bluefish 2.2.11" >
 <meta name="author" content="John M Collins" >
-<meta name="date" content="2021-10-14T11:32:26+0100" >
+<meta name="date" content="2021-10-24T11:04:09+0100" >
 <meta name="copyright" content="John Collins GPLv3">
 <meta name="keywords" content="Go,British Go Association,League">
 <meta name="description" content="League for BGA web pages">
@@ -48,7 +48,7 @@ EOT;
 		print " class=\"$bodyclass\"";
 	if  (!is_null($onload))
 		print " online=\"$onload\"";
-	if  (!!s_null($onunload))
+	if  (!is_null($onunload))
 		print " onunload=\"$onunload\"";
 	print ">\n";
 	print <<<EOT
