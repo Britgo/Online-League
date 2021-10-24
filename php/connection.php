@@ -41,7 +41,7 @@ class Connection extends mysqli  {
 
 		$this->userid = "";
 		$this->username = "";
-		$$this->userpriv = 'N';
+		$this->userpriv = 'N';
 		$this->logged_in = false;
 		$this->admin = false;
 	}
