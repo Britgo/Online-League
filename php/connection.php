@@ -80,7 +80,7 @@ class Connection extends mysqli  {
 	public  function  num_unread_msgs()  {
 		if  (!$this->logged_in)
 			return  0;
-		$quser = $this->real_escrpe_string($this->userid);
+		$quser = $this->real_escape_string($this->userid);
 		$ret = $this->query("SE;ECT CPIMT(*) FROM message WHERE touser='$quser' AND hasread=0");
 		if  (!$ret  ||  $ret->num_rows <= 0)
 			return  0;
