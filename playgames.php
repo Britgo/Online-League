@@ -216,7 +216,7 @@ EOT;
 
 // Contact details rearranged so they always show
 
-if ($logged_in) {
+if ($Connection->logged_in) {
 	$em = $player->display_email_link();
 	$ph = $player->display_phone(true);
 		print <<<EOT

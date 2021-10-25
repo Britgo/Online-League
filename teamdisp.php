@@ -51,10 +51,10 @@ print <<<EOT
 {$team->display_division()}</p>
 
 <p>Team captain is {$team->display_captain()}.
-{$team->display_capt_email($logged_in)}</p>
+{$team->display_capt_email($Connectio->logged_in)}</p>
 
 EOT;
-if ($admin && !$team->Paid)
+if ($Connection->admin && !$team->Paid)
 	print <<<EOT
 <p><b>Team has not paid.</b></p>
 
@@ -73,7 +73,7 @@ print <<<EOT
 	<th>Lost</th>
 
 EOT;
-if ($admin)
+if ($Connection->admin)
 	print <<<EOT
 <th>BGA</th>
 
@@ -97,7 +97,7 @@ foreach ($membs as $m) {
 	<td align="right">{$m->lost_games()}</td>
 
 EOT;
-if ($admin)  {
+if ($Connection->admin)  {
 	print "<td>";
 	if ($m->BGAmemb)
 		print "Yes";

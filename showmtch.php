@@ -53,7 +53,7 @@ catch (MatchException $e) {
 		jumpto("histshowmtch.php?hmi={$e->Mid}");
    wrongentry($e->getMessage());
 }
-$editok = $admin || $mtch->is_captain($username) != 'N';
+$editok = $Connection->admin || $mtch->is_captain($username) != 'N';
 $Title = "Match Details";
 lg_html_header($Title);
 lg_html_nav();
