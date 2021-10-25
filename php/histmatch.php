@@ -49,6 +49,7 @@ class HistMatch extends MatchBase {
 	// From match ind get season ind and season
 
 	public function getseason() {
+		global $Connection;
 		$ret = $Connection->query("SELECT seasind FROM histmatch WHERE ind={$this->Ind}");
 		if (!$ret || $ret->num_rows != 1)
 			throw new MatchException("Cannot read database for season ind");
@@ -72,6 +73,7 @@ class HistMatch extends MatchBase {
 	// apart FROM the teams
 
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT divnum,hteam,ateam,matchdate,hwins,awins,draws,result,defaulted FROM histmatch WHERE $q");
 		if (!$ret)
@@ -93,6 +95,7 @@ class HistMatch extends MatchBase {
 	// Fetch the game list (not including score)
 
 	public function fetchgames() {
+		global $Connection;
 		$result = array();
 		if  (!$this->Defaulted)  {
 			$ret = $Connection->query("SELECT ind FROM game WHERE {$this->queryof('match')} ORDER BY ind");
@@ -113,6 +116,7 @@ class HistMatch extends MatchBase {
 	}
 
 	public function create() {
+		global $Connection;
 		$qhome = $this->Hteam->queryname();
 		$qaway = $this->Ateam->queryname();
 		$qdate = $this->Date->queryof();
@@ -127,6 +131,7 @@ class HistMatch extends MatchBase {
 // Return the number of matches for a division
 
 function hist_count_matches_for($s, $divnum) {
+	global $Connection;
 	$ret = $Connection->query("SELECT COUNT(*) FROM histmatch WHERE seasind={$s->Ind} and divnum=$divnum");
 	if (!$ret || $ret->num_rows == 0)
 		return  0;

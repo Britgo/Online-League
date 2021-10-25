@@ -56,6 +56,7 @@ class Season  {
 	}
 
 	public function fetchdets() {
+		global $Connection;
 		$ret = $Connection->query("SELECT name,startdate,enddate,league FROM season WHERE {$this->queryof('ind')}");
 		if (!$ret)
 			throw new SeasconException("Cannot read database for season");
@@ -80,6 +81,7 @@ class Season  {
 	}
 
 	public function create() {
+		global $Connection;
 		$qname = $Connection->real_escape_string($this->Name);
 		$qstart = $this->Startdate->queryof();
 		$qend = $this->Enddate->queryof();
@@ -94,6 +96,7 @@ class Season  {
 	}
 
 	public function update() {
+		global $Connection;
 		$qname = $Connection->real_escape_string($this->Name);
 		$qstart = $this->Startdate->queryof();
 		$qend = $this->Enddate->queryof();
@@ -103,6 +106,7 @@ class Season  {
 }
 
 function list_seasons($l = 'T', $desc = false) {
+	global $Connection;
 	$ord = $desc? " desc": "";
 	$ret = $Connection->query("SELECT ind FROM season WHERE league='$l' ORDER BY enddate$ord");
 	$result = array();

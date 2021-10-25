@@ -62,6 +62,7 @@ class News {
 	}#
 
 	public function addnews() {
+		global $Connection;
 		if  (strlen($this->User) != 0)  {
 			$qdate = $this->Date->queryof();
 			$quser = $Connection->real_escape_string($this->User);

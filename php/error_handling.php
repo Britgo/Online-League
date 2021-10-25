@@ -177,6 +177,18 @@ EOT;
 	err_html_trailer();
 }
 
+function mustbesecure() {
+	err_html_header("Must be secure");
+	print <<<EOT
+<h1>Insecure access</h1>
+<p>Sorry but this page needs to be entered securely (with https: at the
+start of the URL).</p>
+<p>Please start again from the top by <a href="index.php">clicking here</a>.</p>
+
+EOT;
+	err_html_trailer();
+}
+
 function prob_pay($message, $parsedresp = NULL)  {
 	err_html_header("Payment error");
 	$qmess = htmlspecialchars($message);

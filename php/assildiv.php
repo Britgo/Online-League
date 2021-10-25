@@ -21,6 +21,7 @@
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function ail_getrow($cols, $sel, $ord = "")  {
+	global $Connection;
 	$q = "SELECT $cols FROM player WHERE ildiv!=0 and $sel";
 	if (strlen($ord) != 0)
 		$q .= " ORDER BY $ord";

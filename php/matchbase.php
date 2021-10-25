@@ -121,6 +121,7 @@ class MatchBase {
 	}
 
 	public function teamalloc()  {
+		global $Connection;
 		if  ($this->Defaulted)
 			return true;
 		$ret = $Connection->query("SELECT COUNT(*) FROM game WHERE {$this->queryof('match')}");

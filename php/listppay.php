@@ -25,9 +25,7 @@ try {
 	$player->fromid($Connection->userid);
 }
 catch (PlayerException $e) {
-	$mess = $e->getMessage();
-	include 'wrongentry.php';
-	exit(0);
+	wrongentry($e->getMessage();
 }
 
 // Grab ourselves a list of pending payments so we don't get mixed up with someone else
@@ -35,11 +33,8 @@ catch (PlayerException $e) {
 // However we delete payments more than 15 minutes old first.
 
 $ret = $Connection->query("DELETE FROM pendpay WHERE paywhen < date_sub(current_timestamp, interval 15 minute)");
-if (!$ret)  {
-    $mess = $Connection->error;
-    include 'dataerror.php';
-    exit(0);
-}
+if (!$ret)
+	database_error($Connection->error);
 
 // Get ourselves an array of pending teams and pending individuals
 
@@ -78,10 +73,8 @@ try {
 		}
 	}
 }
-catch (TeamException $e) {
-	$mess = $e->getMessage();
-	include 'dataerror.php';
-	exit(0);
+catch (TeamException $e)  {
+	database_error($e->getMessage());
 }
 
 // Go over each team and calculate subs for each
@@ -107,7 +100,7 @@ foreach ($unpaid_teams as $team)  {
 // Likewise get list of unpaid indiv league players
 
 $unpaid_il = array();
-//$ret = $Connection->query("SELECT first,last FROM player WHERE ildiv!=0 and ilpaid=0 ORDER BY last,first");
+//$ret = $Connection->query("SELECT first,last FROM player WHERE ildiv!=0 AND ilpaid=0 ORDER BY last,first");
 //if ($ret) {
 //	while ($row = $ret->fetch_array())  {
 //		$f = $row[0];

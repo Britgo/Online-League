@@ -32,12 +32,14 @@ class TeamMemb extends Player  {
 	}
 
 	public function create() {
+		global $Connection;
 		if (!$Connection->query("INSERT INTO teammemb SET tmfirst='{$this->queryfirst()}',tmlast='{$this->querylast()}',{$this->Team->queryof('teamname')},rank={$this->Rank->Rankvalue}"))
 			throw new TeamMembException($Connection->error);
 	}
 }
 
 function del_team_membs($team) {
+	global $Connection;
 	if  (!$Connection->query("DELETE FROM teammemb WHERE {$team->queryof('teamname')}"))
 		throw new TeamMembException($Connection->error);
 }

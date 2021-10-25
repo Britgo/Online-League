@@ -28,8 +28,13 @@ include 'credentials.php';
 
 // First argument determines if we insist on being logged in.
 // Second argument skips trying to log in (for when we're actually logging in from web page).
+// Third argument insists on being secure (https rather than http))
 
-function  opendatabase($mustbeloggedin = false, $loginifposs = true)  {
+function  opendatabase($mustbeloggedin = false, $loginifposs = true, $mustbesecure = false)  {
+
+	if ($mustbesecure && strlen($_SERVER['HTTPS']) == 0)
+		mustbesecure();
+
 	try  {
 		$dbcred = getcredentials('league');
 	}

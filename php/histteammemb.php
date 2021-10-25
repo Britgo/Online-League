@@ -34,6 +34,7 @@ class HistteamMemb extends Player  {
 	//  Fetch the rank which might be different for that season
 
 	public function fetchrank()  {
+		global $Connection;
 		$qsind = $this->Team->Seas->queryof();
 		$qname = $this->queryof('tm');
 		$ret = $Connection->query("SELECT rank FROM histteammemb WHERE $qsind and $qname");
@@ -44,6 +45,7 @@ class HistteamMemb extends Player  {
 	}
 
 	public function create() {
+		global $Connection;
 		$qsind = $this->Team->Seas->queryof();
 		$qindn = $this->Team->Seas->Ind;
 		$qname = $this->queryof('tm');

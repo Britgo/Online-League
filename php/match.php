@@ -83,6 +83,7 @@ class Match extends MatchBase {
 	// apart from the teams
 
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT divnum,hteam,ateam,matchdate,hwins,awins,draws,result,slackdays,defaulted FROM lgmatch WHERE $q");
 		if (!$ret)
@@ -109,6 +110,7 @@ class Match extends MatchBase {
 	// Fetch the game list (not including score)
 
 	public function fetchgames() {
+		global $Connection;
 		$result = array();
 		if  (!$this->Defaulted)  {
 			$ret = $Connection->query("SELECT ind FROM game WHERE {$this->queryof('match')} ORDER BY ind");
@@ -130,6 +132,7 @@ class Match extends MatchBase {
 	}
 
 	public function create() {
+		global $Connection;
 		$qhome = $this->Hteam->queryname();
 		$qaway = $this->Ateam->queryname();
 		$qdate = $this->Date->queryof();
@@ -145,6 +148,7 @@ class Match extends MatchBase {
 	}
 
 	public function dateupdate() {
+		global $Connection;
 		$qdate = $this->Date->queryof();
 		$ret = $Connection->query("UPDATE lgmatch SET matchdate='$qdate',slackdays={$this->Slackdays} WHERE {$this->queryof()}");
 		if (!$ret)
@@ -157,6 +161,7 @@ class Match extends MatchBase {
 	}
 
 	public function delmatch() {
+		global $Connection;
 		$ret = $Connection->query("DELETE FROM lgmatch WHERE {$this->queryof()}");
 		if (!$ret)
 			throw new MatchException($Connection->error);
@@ -192,6 +197,7 @@ class Match extends MatchBase {
 	}
 
 	public function set_defaulted($hora) {
+		global $Connection;
 		switch  ($hora)  {
 		default:
 			return;
@@ -251,6 +257,7 @@ class Match extends MatchBase {
 // Return the number of matches for a division
 
 function count_matches_for($divnum) {
+	global $Connection;
 	$ret = $Connection->query("SELECT COUNT(*) FROM lgmatch WHERE divnum=$divnum");
 	if (!$ret || $ret->num_rows == 0)
 		return  0;

@@ -29,9 +29,10 @@ include 'php/club.php';
 include 'php/rank.php';
 include 'php/player.php';
 include 'php/team.php';
-include 'php/teammemb.php';
 
-$Connection = opendatabase(true);
+// Check must be logged in and have secure access
+
+$Connection = opendatabase(true, true, true);
 
 // Need to include this after we've opened DB
 

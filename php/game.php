@@ -91,6 +91,7 @@ class Game {
 	}
 
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league FROM game WHERE $q");
 		if (!$ret)
@@ -143,6 +144,7 @@ class Game {
 	}
 
 	public function fetchhistdets($seas) {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT divnum,matchdate,wteam,bteam,wfirst,wlast,bfirst,blast,result,reshow,matchind,league FROM game WHERE $q");
 		if (!$ret)
@@ -179,6 +181,7 @@ class Game {
 	}
 
 	public function create_game() {
+		global $Connection;
 
 		// Set these to some numeric value in case not defined
 		// Only invoked for team league.
@@ -221,6 +224,7 @@ class Game {
 	}
 
 	public function update_players()  {
+		global $Connection;
 
 		// Set these to some numeric value in case not defined
 
@@ -260,6 +264,7 @@ class Game {
 	}
 
 	private function has_sgf() {
+		global $Connection;
 		$ret = $Connection->query("SELECT length(sgf) FROM game WHERE {$this->queryof()}");
 		if (!$ret)
 			return false;
@@ -284,6 +289,7 @@ class Game {
 	}
 
 	public function reversecolours() {
+		global $Connection;
 		// For when colours are reversed - assumes everything loaded OK
 		$tmp = $this->Wteam;
 		$this->Wteam = $this->Bteam;
@@ -328,11 +334,13 @@ class Game {
 	}
 
 	public function reset_date($dat) {
+		global $Connection;
 		$this->Date = $dat;
 		$Connection->query("UPDATE game SET matchdate='{$dat->queryof()}' WHERE {$this->queryof()}");
 	}
 
 	public function adj_match($mtch, $mult) {
+		global $Connection;
 		switch ($this->Result) {
 		default:
 			return;
@@ -374,6 +382,7 @@ class Game {
 	//  Only valid for team league.
 
 	public function set_result($res, $restype) {
+		global $Connection;
 		$mtch = new Match($this->Matchind);
 		$mtch->fetchdets();
 		// Undo whatever we had before (to cope with corrections
@@ -392,6 +401,7 @@ class Game {
 	// Delete wrongly entered result
 
 	public function delete_result() {
+		global $Connection;
 		if ($this->League == 'I')  {
 			$Connection->query("DELETE FROM game WHERE {$this->queryof()}");
 		}
@@ -407,6 +417,7 @@ class Game {
 	}
 
 	public function get_sgf() {
+		global $Connection;
 		$ret = $Connection->query("SELECT sgf FROM game WHERE {$this->queryof()}");
 		if (!$ret  ||  $ret->num_rows == 0)
 			return;
@@ -415,18 +426,21 @@ class Game {
 	}
 
 	public function set_sgf($sgfdata) {
+		global $Connection;
 		$qsgfdata = $Connection->real_escape_string($sgfdata);
 		$Connection->query("UPDATE game SET sgf='$qsgfdata' WHERE {$this->queryof()}");
 		$this->Sgf = $sgfdata;
 	}
 
 	public function set_current($v = false, $si = 0) {
+		global $Connection;
 		$vi = $v? 1: 0;
 		$Connection->query("UPDATE game SET current=$vi,seasind=$si WHERE {$this->queryof()}");
 	}
 }
 
 function list_nosgf_games() {
+	global $Connection;
 	$result = array();
 	$ret = $Connection->query("SELECT ind FROM game WHERE result!='N' and length(sgf)=0 and current=1 ORDER BY matchdate,wrank desc,brank desc");
 	if ($ret) {
@@ -440,6 +454,7 @@ function list_nosgf_games() {
 }
 
 function list_played_games() {
+	global $Connection;
 	$result = array();
 	// Fix this to only do current season games (only used in fixres.php)
 	$ret = $Connection->query("SELECT ind FROM game WHERE result!='N' and seasind=0 ORDER BY matchdate,wlast,wfirst,blast,bfirst");

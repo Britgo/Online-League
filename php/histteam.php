@@ -34,6 +34,7 @@ class Histteam extends Teambase {
 	}
 
 	public function queryof($colname = "name") {
+		global $Connection;
 		$qn = $Connection->real_escape_string($this->Name);
 		return "$colname='$qn' and seasind={$this->Seas->Ind}";
 	}
@@ -44,6 +45,7 @@ class Histteam extends Teambase {
 	}
 
 	public function fetchdets() {
+		global $Connection;
 		$q = $this->queryof();
 		$ret = $Connection->query("SELECT description,divnum,playing,sortrank,playedm,wonm,drawnm,lostm,wong,drawng,lostg FROM histteam WHERE $q");
 		if (!$ret)
@@ -64,6 +66,7 @@ class Histteam extends Teambase {
 		$this->Lostg = $row["lostg"];
 	}
 	public function create() {
+		global $Connection;
 		$qname = $Connection->real_escape_string($this->Name);
 		$qdescr = $Connection->real_escape_string($this->Description);
 		$qdiv = $this->Division;
@@ -86,6 +89,7 @@ class Histteam extends Teambase {
 	}
 
 	public function count_members() {
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM histteammemb WHERE {$this->queryof('teamname')}");
 		if (!$ret || $ret->num_rows == 0)
 			return 0;
@@ -94,6 +98,7 @@ class Histteam extends Teambase {
 	}
 
 	public function list_members($order = "rank desc,tmlast,tmfirst") {
+		global $Connection;
 		$ret = $Connection->query("SELECT tmfirst,tmlast FROM histteammemb WHERE {$this->queryof('teamname')} ORDER BY $order");
 		$result = array();
 		if ($ret) {
@@ -105,6 +110,7 @@ class Histteam extends Teambase {
 	}
 
 	private function getcount($q) {
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM histmatch WHERE {$this->Seas->queryof()} and $q");
 		if (!$ret || $ret->num_rows == 0)
 			return  0;
@@ -130,6 +136,7 @@ class Histteam extends Teambase {
 }
 
 function hist_list_teams($s, $div = 0, $order = "name", $pl = 1) {
+	global $Connection;
 	$divsel = $div == 0? "": " and divnum=$div";
 	$i = $s->Ind;
 	$ret = $Connection->query("SELECT name FROM histteam WHERE playing=$pl and seasind=$i$divsel ORDER BY $order");
@@ -143,6 +150,7 @@ function hist_list_teams($s, $div = 0, $order = "name", $pl = 1) {
 }
 
 function hist_max_division($s) {
+	global $Connection;
 	$ret = $Connection->query("SELECT max(divnum) FROM histteam WHERE playing=1 and seasind={$s->Ind}");
 	if ($ret && $ret->num_rows > 0) {
 		$row = $ret->fetch_array();

@@ -59,6 +59,7 @@ class TeamBase {
 	}
 
 	public function queryname() {
+		global $Connection;
 		return $Connection->real_escape_string($this->Name);
 	}
 

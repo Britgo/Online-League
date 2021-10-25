@@ -20,7 +20,6 @@
 //   You should have received a copy of the GNU General Public License
 //   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-include 'php/checksecure.php';
 include 'php/html_blocks.php';
 include 'php/error_handling.php';
 include 'php/connection.php';
@@ -31,7 +30,10 @@ include 'php/player.php';
 include 'php/team.php';
 include 'php/teammemb.php';
 
-$Connection = opendatabase(true);
+// Check logged in and secure
+
+$Connection = opendatabase(true, true, true);
+
 // This is the module called when all goes OK with the initial transaction, we need to get details of the
 // transaction from Paypal and set up to call the final confirmation.
 

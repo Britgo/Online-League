@@ -342,7 +342,7 @@ class Player  {
 	// Set password
 
 	public function set_passwd($pw)  {
-		global $Connection;		
+		global $Connection;
 		$qpw = $Connection->real_escape_string($pw);
 		$Connection->query("UPDATE player SET password='$qpw' WHERE{$this->queryof()}");
 	}
@@ -641,7 +641,7 @@ class Player  {
 	// Count historic teams this player is a member of
 
 	public function count_hist_teams() {
-		global $Connection;	
+		global $Connection;
 		$ret = $Connection->query("SELECT COUNT(*) FROM histteammemb WHERE {$this->queryof('tm')}");
 		if (!$ret || $ret->num_rows == 0)
 			return 0;
